@@ -1,0 +1,10 @@
+---
+ title: Analyse exploratoire de données
+---
+
+
+```{r}
+load()
+
+
+```

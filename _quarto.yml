@@ -18,6 +18,7 @@ book:
         - scripts/data_collection.qmd
         - scripts/data_cleaning.qmd
         - scripts/data_loading.qmd
+        - scripts/data_exploratory.qmd
     - part: "Phase 2 : Implémentation de l'architecture ETL (Microsoft SSIS)"
       chapters: []
    

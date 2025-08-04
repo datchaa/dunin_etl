@@ -854,6 +854,27 @@ dim_adresses |> distinct()
 
 ```
 
+
+# chargement dans la base de données
+
+```{r eval=FALSE}
+source("C:/Users/18195/Documents/dunin/utils/extract/sql_server.R")
+
+con_dwh <- get_sqlServerCon_by_windows_auth(server_name = "SCUS-PF1K22N9",
+ db_name = "DUNIN_DWH"
+)
+```
+
+```{r eval=FALSE}
+DBI::dbWriteTable(con_dwh,"dbo.dim_dates",dim_dates |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.dim_clients",dim_clients  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.dim_representants",dim_representants  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.dim_adresses",dim_adresses  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.dim_projets",dim_projets  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.fact_etapes",fact_etapes |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.fact_lumieres",fact_lumieres |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dbo.transactions",transactions |> distinct(),append = TRUE)
+```
 # Conclusion
 
 Ce modèle dimensionnel constitue la fondation analytique du système décisionnel à implementer dans la phase 2 . Il transforme des données opérationnelles complexes en une structure optimisée pour l'analyse business, respectant les bonnes pratiques du data warehousing tout en préservant la richesse informationnelle des sources. L'architecture modulaire facilite la maintenance et permet une évolution contrôlée selon les besoins métier émergents.

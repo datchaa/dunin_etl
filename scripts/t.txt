@@ -1,0 +1,8 @@
+DBI::dbWriteTable(con_dwh,"dim_dates",dim_dates |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dim_clients",dim_clients  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dim_representants",dim_representants  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dim_adresses",dim_adresses  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"dim_projets",dim_projets  |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"fact_etapes",fact_etapes |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"fact_lumieres",fact_lumieres |> distinct(),append = TRUE)
+DBI::dbWriteTable(con_dwh,"transactions",transactions |> distinct(),append = TRUE)

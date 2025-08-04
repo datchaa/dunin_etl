@@ -1,0 +1,20 @@
+---
+title: "Acceuil"
+---
+
+Ce document introduit le projet **Mandat Dunin**. Il s’agit d’un mandat d’analyse de données visant à extraire de la valeur à partir des données commerciales et opérationnelles d’une entreprise, en vue d’optimiser ses performances de ventes et marketing.
+
+# Définition des objectifs du projet
+
+Mettre en place une solution d'analyse automatisée des données de vente afin d'identifier les tendances clés et les opportunités d'amélioration de la performance commerciale.
+
+# Méthodologie
+
+la méthodologie de gestion de projet choisie pour ce projet est le : scrum .
+
+## Équipe et parties prenantes
+
+Datcha simon-pierre Beugré : Consultant
+
+Marc André : Encadreur , product owner
+

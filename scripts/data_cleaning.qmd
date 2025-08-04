@@ -1,0 +1,391 @@
+# Néttoyage et transformations des données
+
+Cette phase du processus ETL assure la qualité et la cohérence des données extraites des fichiers XML. Le nettoyage standardise les formats, corrige les incohérences et prépare les données pour l'analyse business en appliquant des règles de transformation uniformes à l'ensemble du dataset.
+
+## Données d'entrée
+
+Le processus traite les tables extraites lors de la phase précédente :
+
+-   **PROJETS** - Informations projet et client
+
+-   **COMMANDES** - Données commerciales des commandes
+
+-   **CONTRATS** - Informations contractuelles
+
+-   **KITS** - Spécifications techniques détaillées
+
+-   **ADRESSES** - Coordonnées géographiques
+
+-   **ETAPES** - Workflow et suivi
+
+-   **LUMIERES** - Éléments d'éclairage
+
+### Approche méthodologique
+
+Le nettoyage suit une approche systématique avec des fonctions spécialisées pour chaque type de données, garantissant la cohérence et la reproductibilité du processus
+
+```{r}
+load("C:/Users/18195/Documents/dunin/data/processed/commandes.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/contrats.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/projets.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/etapes.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/kits.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/adresses.RData")
+load("C:/Users/18195/Documents/dunin/data/processed/lumieres.RData")
+```
+
+## fonctions de nettoyages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+
+
+psd <- function(df) {
+  df <- df %>%
+    mutate(
+      psd = rowSums(across(where(is.character), ~ grepl("PSD", .x, ignore.case = TRUE)), na.rm = TRUE) > 0
+    ) %>%
+    mutate(across(where(is.character), ~ ifelse(.x == "PSD", NA, .x)))
+  return(df)
+}
+
+
+# 1. Chaînes de caractères
+clean_char <- function(x) {
+  x |>
+    str_trim() |>
+    str_squish() |>
+    as.character() |> na_if("") 
+}
+
+# 2. Booléens
+clean_bool <- function(x) {
+  x <- str_trim(x)
+  x <- str_to_lower(x)
+  case_when(
+    x %in% c("1", "true", "oui", "yes") ~ TRUE,
+    x %in% c("0", "false", "non", "no") ~ FALSE,
+    is.na(x)                            ~ FALSE,
+    TRUE                                ~ FALSE
+  )
+}
+
+# 3. Pourcentage
+clean_pct <- function(x) {
+  x |>
+    str_remove_all("[%\\s]") |>
+    as.numeric() |>
+    replace_na(0) 
+}
+
+# 4. Montants
+clean_money <- function(x) {
+  x |>
+    str_remove_all("[^0-9\\.-]") |>
+    as.numeric() |>
+    replace_na(0)
+}
+
+# 5. Dates souples
+clean_date <- function(x, formats = c("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d")) {
+  x <- str_trim(x)
+  x[x == ""] <- NA
+  as.Date(x, tryFormats = formats)
+}
+
+# 6. Décimales
+clean_decimal <- function(x) {
+  x |>
+    str_trim() |>
+    str_squish() |>
+    str_replace_all(",", ".") |>
+    str_remove_all("[,\\s]") |>
+    as.numeric() |>
+    replace_na(0)
+}
+  
+```
+
+### Fonction spécialisée - `psd()`
+
+**Objectif** : Identifie les enregistrements contenant des marqueurs "PSD" (Prise Sur Demande) et crée un indicateur booléen tout en nettoyant les champs concernés.
+
+### Nettoyage des chaînes de caractères - `clean_char()`
+
+-   **Suppression** des espaces en début/fin et multiples
+
+-   **Standardisation** des chaînes vides
+
+-   **Normalisation** du format texte
+
+### Conversion booléenne - `clean_bool()`
+
+-   **Reconnaissance** des valeurs : "1", "true", "oui", "yes" → TRUE
+
+-   **Standardisation** des valeurs : "0", "false", "non", "no" → FALSE
+
+-   **Gestion** des valeurs manquantes → FALSE par défaut
+
+### Nettoyage des pourcentages - `clean_pct()`
+
+-   **Suppression** des symboles % et espaces
+
+-   **Conversion** numérique avec gestion des valeurs manquantes
+
+### Nettoyage des montants - `clean_money()`
+
+-   **Extraction** des valeurs numériques uniquement
+
+-   **Suppression** des devises et formatage
+
+-   **Gestion** des décimales et signes négatifs
+
+### Nettoyage des dates - `clean_date()`
+
+-   **Support** de formats multiples (ISO, français, américain)
+
+-   **Conversion** automatique avec validation
+
+-   **Gestion** des dates invalides
+
+### Nettoyage des décimales - `clean_decimal()`
+
+-   **Normalisation** des séparateurs décimaux (virgule → point)
+
+-   **Suppression** des caractères non numériques
+
+-   **Conversion** avec préservation de la précision
+
+## Traitement par table
+
+### projets
+
+```{r}
+projets_clean <- projets |> mutate(
+    # 1. Caractères
+    across(
+      c(code, client, marche, codeRepresentant, nomRepresentant,
+        division, ciClient, courrielContact, nomContact,
+        telephoneContact, starts_with("coords"),
+        createurNom, createurCourriel),
+      clean_char
+    ),
+    
+    # 2. Booléens
+    across(c(estReprise, enFusion), clean_bool),
+    
+    # 3. Date
+    dateCreation = clean_date(dateCreation)
+  )
+
+  projets_clean |> glimpse()
+```
+
+### addresses
+
+```{r}
+# Nettoyage et conversion des colonnes
+adresses_clean <- adresses |>
+  mutate(
+    # Chaînes de caractères
+    across(c(codePost, etatProv, ligne1, pays, region, ville, usage, code, sorte, nom, contact, ligne2,projet_id), clean_char),
+    # Booléens
+    estJS = NULL,
+
+  )
+  adresses_clean |> glimpse()
+```
+
+### commandes
+
+```{r}
+commandes <- commandes |> psd()
+commandes_clean <- commandes |>
+  mutate(
+    # 1. Chaînes de caractères
+    across(
+      c(code, nomClient, codeClient2, typeClient, createurNom, createurCourriel,
+        division, projet),
+      clean_char
+    ),
+
+    # 2. Booléens
+    across(
+      c(validCred, estImport, estReprise, estCQ,
+        avecLivraison, installation,
+        statutCred),
+      clean_bool
+    ),
+
+    # 3. Dates
+    dateCreation   = clean_date(dateCreation),
+    dateValidite   = clean_date(dateValidite),
+    datePrevExped  = clean_date(datePrevExped),
+
+    # 4. Nombres (entiers ou décimaux)
+    delaiPrevExped = clean_decimal(delaiPrevExped),
+    nbJourValide   = clean_decimal(nbJourValide),
+    qteItems       = clean_decimal(qteItems),
+    qteItemsCab    = clean_decimal(qteItemsCab),
+
+    # 5. Montants
+    across(
+      c(total, totalHT, sousTotal, sousTotal2,
+        totalLivraison, totalInstall, totalCEM,
+        promotions, totalTx1, totalTx2, ecartPrix, solde),
+      clean_money
+    )
+  )
+```
+
+### contrats
+
+```{r}
+contrats <- contrats |> psd()
+contrats_clean <- contrats |> mutate(
+    # 1. Chaînes de caractères
+    across(
+      c(code, codeClient2, nomClient, typeClient,
+        projet, division,
+        createurNom, createurCourriel,
+        codePost, codePostFinal),
+      clean_char
+    ),
+
+    # 2. Booléens
+    across(c(validCred, estReprise, avecLivraison, installation ,statutCred), clean_bool),
+
+    # 3. Dates
+    dateCreation  = clean_date(dateCreation),
+    dateValidite  = clean_date(dateValidite),
+    datePrevExped = clean_date(datePrevExped),
+
+    # 4. Nombres / Décimales
+    delaiPrevExped = clean_decimal(delaiPrevExped),
+    nbJourValide   = clean_decimal(nbJourValide),
+    qteItems       = clean_decimal(qteItems),
+    qteItemsCab    = clean_decimal(qteItemsCab),
+
+    # 5. Montants
+    across(
+      c(total, totalHT, sousTotal, sousTotal2,
+        totalLivraison, totalInstall,
+        totalComptoirBois, totalComptoirGranite,
+        totalComptoirQuartz, totalComptoirStratifie,
+        totalEsc, ecartPrix, montantEcartPrix,
+        fraisPSD, fraisPDM, fraisSAV, TotalEscompte,
+        promotions),
+      clean_money
+      )
+)
+
+```
+
+### kits
+
+```{r}
+kits <- kits |> psd()
+# Nettoyage et conversion des colonnes de la table kits
+kits_clean <- kits |>
+  mutate(
+    # 1. Chaînes de caractères
+    across(
+      c(code, nom, typeKit, unit, comptoirMod, comptoirCouleur,
+        comptoirGpCouleur, assemblage, gamme, serie, finishColor,
+        edgeColle, edgeBanding, bd_edgeBanding, df_edgeBanding,
+        wd_edgeBanding, edgePorte, edgeTablette, handle, handleOri,
+        bd_handle, bd_handleOri, df_handle, df_handleOri,
+        cabDesign, cabConstruct, cabHinge, cabWallProf, t_cabWallProf,
+        cabToeKickType, cabAlignBase, t_cabAlignBase,
+        cabTallHeightAlign, t_cabTallHeightAlign, cabTypeComptoir,
+        tabletteType, drawerConst, drawerSlide, matPatte,
+        patteAchetee, equerre, cacheNeon, beamModele, ligne,
+        contrat_id, commande_id, signature, kitUtilisation, specie,
+        bd_specie, df_specie, bd_serie, df_serie, bd_finishColor,
+        df_finishColor, porteModeleB, porteModeleH,
+        porteModeleFacadeB, porteModeleFacadeH,
+        porteModeleBSensGrain, porteModeleHSensGrain,
+        porteModeleFacadeBSensGrain, porteModeleFacadeHSensGrain,
+        moulLumModele, moulPiedModele, detailSection, aBomCustom,
+        couleurEstBois, items, typeColor),
+      clean_char
+    ),
+
+    # 2. Booléens
+    across(c(estBloqPrix, estPrixAdmin, estExtra, enErreur, psd), clean_bool),
+
+    # 3. Décimales
+    across(
+      c(qte, qteTr, nbComptoir, longComptoir, surfaceComptoir,
+        cumulComptoir, cabHautComptoir, t_cabHautComptoir,
+        cabDegagementWall, t_cabDegagementWall,
+        cabToeKickHeight, t_cabToeKickHeight,
+        cabToeKickProf, t_cabToeKickProf,
+        beamHeight, t_beamHeight,
+        porteModeleB_epais, t_porteModeleB_epais,
+        porteModeleH_epais, t_porteModeleH_epais,
+        porteModeleFacadeB_epais, t_porteModeleFacadeB_epais,
+        porteModeleFacadeH_epais, t_porteModeleFacadeH_epais,
+        moulLumHeight, t_moulLumHeight,
+        moulPiedHeight, t_moulPiedHeight),
+      clean_decimal
+    ),
+
+    # 4. Montants
+    across(
+      c(sousTotalKit, sousTotalKitEff, sousTotal, sousTotalEff,
+        totalComptoir, totalComptoirEff, extraComptoir,
+        sousTotalCab, sousTotalPanel, sousTotalMoulure, sousTotalAutre),
+      clean_money
+    )
+  )
+
+  kits_clean |> glimpse()
+```
+
+### etapes
+
+```{r}
+etapes_clean <- etapes |>
+  mutate(
+    # 1. Chaînes de caractères
+    across(
+      c(createur, emplacement, statut, commande_id, contrat_id),
+      clean_char
+    ),
+
+    # 2. Dates
+    dateCreation  = clean_date(dateCreation),
+
+    # 3. Durée (décimale en heures ou minutes)
+    tempsCreation = clean_decimal(tempsCreation)
+  )
+```
+
+### lumieres
+
+```{r}
+lumieres_clean <- lumieres |>
+  mutate(
+    modele     = clean_char(modele),
+    qte        = clean_decimal(qte),
+    contrat_id = clean_char(contrat_id)
+  )
+```
+
+# Conclusion
+
+Cette phase de nettoyage transforme des données brutes hétérogènes en un dataset uniforme et fiable.
+
+```{r eval=FALSE}
+save(projets_clean,file="data/cleaned/projets_clean.RData")
+save(adresses_clean,file="data/cleaned/adresses_clean.RData")
+save(commandes_clean,file="data/cleaned/commandes_clean.RData")
+save(contrats_clean,file="data/cleaned/contrats_clean.RData")
+save(etapes_clean,file="data/cleaned/etapes_clean.RData")
+save(lumieres_clean,file="data/cleaned/lumieres_clean.RData")
+save(kits_clean,file="data/cleaned/kits_clean.RData")
+```

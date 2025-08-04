@@ -1,0 +1,885 @@
+---
+ title : Collecte  et extractions des données
+
+ warning: false
+ message: false
+---
+
+# Identification et collecte des sources de données
+
+| Source | Type | méthode de collection | description | fréquence |
+|---------------|---------------|---------------|---------------|---------------|
+| avivia | Base de données SQL (OLTP) | semi- automatisé via Eve | Base de donnée transactionnel des activités de ventes | Temps réel |
+|  |  |  |  |  |
+|  |  |  |  |  |
+
+# connection à la base données
+
+```{r}
+source("C:/Users/18195/Documents/dunin/utils/extract/sql_server.R")
+con <- get_sqlServerCon_by_server_auth(
+    server_name = Sys.getenv('Avivia_HOST_SERVER'),
+    db_name = Sys.getenv('Avivia_DB_NAME'),
+    user_name = Sys.getenv('Avivia_DB_USER'),
+    passwrd = Sys.getenv('Avivia_DB_PWD')
+)
+```
+
+```{r}
+source("C:/Users/18195/Documents/dunin/utils/extract/standard.R")
+con |> show_tables() |> print()
+```
+
+# critiques des données
+
+# selection des données
+
+```{r}
+commandes <- get_table_in_lazy_method(con,"CommEW")
+contrats <- get_table_in_lazy_method(con,"ContratEW")
+projets <- get_table_in_lazy_method(con,"ProjetEW")
+```
+
+```{r}
+commandes |> dplyr::glimpse()
+contrats |> dplyr::glimpse()
+projets |> dplyr::glimpse()
+```
+
+::: callout-important
+Après une analyse des champs des différentes tables, nous avons choisi de nous concentrer sur ceux contenant des fichiers XML notemment : ***`DocumXML`*****, *`EveXML`*** et *`ProjetXML`* . Ces derniers non seulement synthétisent les informations de chaque table, mais renferment également davantage de données pertinentes et intéressantes.
+:::
+
+# Collecte des fichiers xmls
+
+```{r  eval = FALSE }
+projets_xmls <- list(
+  projetXMLS = projets |> dplyr::pull(ProjetXML),
+  Ids =  projets |> dplyr::pull(Code)
+)
+save(projets_xmls,file ="data/raw/xml/projets_xmls.RData")
+```
+
+```{r eval = FALSE}
+commandes_xmls <- list(
+  DocumXMLS = commandes|> dplyr::pull(DocumXML),
+  EveXMLS   = commandes|> dplyr::pull(EveXML),
+  Ids  = commandes|> dplyr::pull(Code)
+)
+save(commandes_xmls,file ="data/raw/xml/commandes_xmls.RData")
+```
+
+```{r eval = FALSE}
+contrats_xmls <- list(
+  DocumXMLS = contrats|> dplyr::pull(DocumXML),
+  EveXMLS   = contrats|> dplyr::pull(EveXML),
+  Ids  = contrats|> dplyr::pull(Code) 
+)
+save(contrats_xmls,file ="data/raw/xml/contrats_xmls.RData")
+```
+
+```{r}
+DBI::dbDisconnect(con)
+```
+
+s\.
+
+## chargement des fichiers xmls
+
+Le système traite trois types de documents XML :
+
+Projets : Informations sur les projets clients et leurs caractéristiques Commandes : Données commerciales et d'ingenierie des commandes (DocumXML et EveXML) Contrats : Informations contractuelles et d'ingenierie (DocumXML et EveXML)
+
+Chaque type de document contient des structures hiérarchiques avec des objets (<obj>) et des propriétés (<prop>) qu'il faut normaliser en tables plates.
+
+```{r echo=TRUE , eval=FALSE}
+source("C:/Users/18195/Documents/dunin/utils/extract/xml.R")
+load("C:/Users/18195/Documents/dunin/data/raw/xml/commandes_xmls.RData")
+load("C:/Users/18195/Documents/dunin/data/raw/xml/contrats_xmls.RData")
+load("C:/Users/18195/Documents/dunin/data/raw/xml/projets_xmls.RData")
+
+```
+
+## Méthodologie d'extraction
+
+Fonctions principales développées
+
+***convert_xml_file_To_Tibble()***
+
+Cette fonction constitue le cœur du processus d'extraction :
+
+-   Objectif : Convertir un document XML en liste de tables classées par type d'objet
+
+-   Mécanisme : Parcours récursif des nœuds <obj> pour extraire les propriétés de type <prop>
+
+-   Filtrage : Possibilité de sélectionner des classes spécifiques via le paramètre select_clas Validation : Vérification de cohérence entre noms de propriétés et valeurs
+
+***convert_Xmlfiles_Data_from_tableToTbls()***
+
+Fonction d'agrégation permettant de :
+
+Traiter une liste complète de fichiers XML Ajouter des identifiants parents pour maintenir la traçabilité Fusionner les tables par classe d'objet Garantir l'intégrité référentielle entre fichiers
+
+## Processus d'extraction par type
+
+```{r eval = FALSE, echo = TRUE, warning=FALSE}
+
+# ==========================
+library(xml2)      # Pour lire et manipuler des fichiers XML
+library(dplyr)     # Pour manipuler les tableaux de données (tibbles)
+library(purrr)     # Pour les fonctions de programmation fonctionnelle (map, walk, etc.)
+library(stringr)   # Pour manipuler les chaînes de caractères
+library(tibble)    # Pour créer des objets tibbles (données tabulaires modernes)
+
+# ==========================
+# Fonction : convert_xml_file_To_Tibble
+# Objectif : Convertir un document XML en une liste de tables (tibbles) classées par type d'objet
+# ==========================
+convert_xml_file_To_Tibble <- function(doc, select_clas = NULL) {
+  tryCatch({
+
+    # --- Étape 1 : Vérification et conversion de l'objet XML ---
+    if (!inherits(doc, "xml_document")) {
+      doc <- as_xml_document(doc)
+      cat("L'entrée a été convertie en un objet xml_document \n")
+    }
+
+    root <- xml_root(doc)
+    if (is.null(root)) {
+      warning("Le document XML est vide")
+      return(list())
+    }
+
+    # --- Étape 2 : Préparer le filtre de sélection ---
+    select_pattern <- as.character(select_clas %||% character(0))
+    has_selection <- length(select_pattern) > 0
+
+    # --- Étape 3 : Initialiser le conteneur de résultats ---
+    tables <- list()
+
+    # --- Étape 4 : Fonction récursive de parcours des noeuds <obj> ---
+    parse_obj <- function(node) {
+      tryCatch({
+        clas <- xml_attr(node, "clas")
+        if (is.na(clas) || is.null(clas)) return()
+
+        # Si sélection active, ignorer les noeuds non correspondants
+        if (has_selection) {
+          keep <- str_detect(clas, regex(select_pattern, ignore_case = TRUE))
+          if (!keep) return()
+        }
+
+        # Extraire les propriétés de type <prop> sans sous-éléments
+        props <- xml_find_all(node, "./prop[not(*) and not(.//obj)]")
+        if (length(props) == 0) return()
+
+        texts <- xml_text(props) %>% trimws()
+        names <- xml_attr(props, "nom") %>% str_remove("^\\$")
+
+        # Vérification cohérence nom/valeur
+        if (length(texts) != length(names)) {
+          warning(sprintf("Incohérence dans %s : %d valeurs / %d noms",
+                          clas, length(texts), length(names)))
+          return()
+        }
+
+        # Création d'une ligne de données nommée
+        row <- set_names(texts, names)
+
+        # Ajout de la ligne à la bonne table
+        if (is.null(tables[[clas]])) tables[[clas]] <<- tibble()
+        tables[[clas]] <<- tryCatch(
+          bind_rows(tables[[clas]], as_tibble_row(row)),
+          error = function(e) {
+            warning(sprintf("bind_rows échoue pour %s : %s", clas, e$message))
+            tables[[clas]]
+          }
+        )
+
+        # Parcours récursif des objets enfants
+        children <- c(xml_find_all(node, "./prop//obj"),
+                      xml_find_all(node, "./prop//entr/obj"))
+        walk(children, parse_obj)
+
+      }, error = function(e) {
+        warning(sprintf("Erreur lors du traitement du nœud : %s", e$message))
+      })
+    }
+
+    # --- Étape 5 : Démarrer l'extraction à partir des objets <obj> ---
+    objs <- tryCatch(xml_find_all(root, ".//obj"),
+                     error = function(e) xml_nodeset())
+    if (length(objs)) walk(objs, parse_obj)
+
+    # --- Étape 6 : Nettoyer les noms de colonnes (supprimer les caractères non alphanumériques) ---
+    tables <- map(tables, ~ tryCatch(
+      rename_with(., ~ str_replace_all(.x, "[^[:alnum:]_]", "")),
+      error = function(e) .
+    ))
+
+    cat("Conversion terminée\n")
+    return(tables)
+
+  }, error = function(e) {
+    warning("Erreur globale :", e$message)
+    return(list())
+  })
+}
+
+# ==========================
+# Fonction : convert_Xmlfiles_Data_ToTbl
+# Objectif : Convertir une liste de fichiers XML en une liste de tables unifiées (fusionnées par classe)
+# ==========================
+convert_Xmlfiles_Data_from_tableToTbls <- function(files, select_clas = NULL, parentName = NULL, parentIDS = NULL) {
+  # Vérifier que parentName et parentIDS sont fournis ensemble
+  if (is.null(parentName) || is.null(parentIDS)) {
+    stop("parentName et parentIDS doivent être fournis ensemble ou non fournis du tout")
+  }
+
+  # Vérifier que files et parentIDS ont la même longueur si parentIDS est fourni
+  if (!is.null(parentIDS) && length(files) != length(parentIDS)) {
+    stop("La longueur de 'files' doit être égale à celle de 'parentIDS'")
+  }
+
+  # Appliquer la conversion à chaque fichier avec son ID parent associé
+  data <- lapply(seq_along(files), function(i) {
+    tbls <- convert_xml_file_To_Tibble(files[[i]], select_clas)
+    
+    # Ajouter la colonne parent si parentName et parentIDS sont fournis
+    if (!is.null(parentName) && !is.null(parentIDS)) {
+      tbls <- lapply(tbls, function(tbl) {
+        if (is.data.frame(tbl) && nrow(tbl) > 0) {
+          tbl[[parentName]] <- parentIDS[[i]]
+          tbl
+        } else {
+          tbl
+        }
+      })
+    }
+    tbls
+  })
+
+  # Fusionner les tables par nom de classe (clé de liste)
+  tbls <- lapply(names(data[[1]]), function(tblName) {
+    map_dfr(data, tblName)
+  })
+  
+  names(tbls) <- names(data[[1]])
+  return(tbls)
+}
+
+
+
+```
+
+```{r eval = FALSE, echo = TRUE}
+projets_xmls_extracted_tables <- convert_Xmlfiles_Data_from_tableToTbls(
+  files = projets_xmls$projetXMLS,
+  parentName = "projet_id",
+  parentIDS = projets_xmls$Ids
+)
+
+save(projets_xmls_extracted_tables,file="data/extracted/projets_xmls_extracted_tables.RData")
+```
+
+```{r eval = FALSE, echo = TRUE}
+commandes_xmls_extracted_tables <- list()
+commandes_xmls_extracted_tables$DocumXML<-convert_Xmlfiles_Data_from_tableToTbls(
+ files = commandes_xmls$DocumXMLS,
+ parentName = "commande_id",
+ parentIDS = commandes_xmls$Ids
+)
+
+commandes_xmls_extracted_tables$EveXML<-convert_Xmlfiles_Data_from_tableToTbls(
+ files = commandes_xmls$EveXMLS,
+ select_clas = 'kit',
+ parentName = "commande_id",
+ parentIDS = commandes_xmls$Ids
+)
+
+save(commandes_xmls_extracted_tables,file="data/extracted/commandes_xmls_extracted_tables.RData")
+```
+
+```{r eval = FALSE, echo = TRUE}
+
+contrats_xmls_extracted_tables <- list()
+
+contrats_xmls_extracted_tables$DocumXML<-convert_Xmlfiles_Data_from_tableToTbls(
+ files = contrats_xmls$DocumXMLS,
+ parentName = "contrat_id",
+ parentIDS = contrats_xmls$Ids
+)
+
+contrats_xmls_extracted_tables$EveXML<-convert_Xmlfiles_Data_from_tableToTbls(
+ files = contrats_xmls$EveXMLS,
+ parentName = "contrat_id",
+ select_clas = 'kit',
+ parentIDS = contrats_xmls$Ids
+)
+
+save(contrats_xmls_extracted_tables,file="data/extracted/contrats_xmls_extracted_tables.RData")
+```
+
+# Données extraites
+
+```{r}
+load("C:/Users/18195/Documents/dunin/data/extracted/commandes_xmls_extracted_tables.RData")
+load("C:/Users/18195/Documents/dunin/data/extracted/contrats_xmls_extracted_tables.RData")
+load("C:/Users/18195/Documents/dunin/data/extracted/projets_xmls_extracted_tables.RData")
+```
+
+## Commandes
+
+```{r}
+commandes_xmls_extracted_tables$DocumXML |> print()
+commandes_xmls_extracted_tables$EveXML |> print()
+```
+
+## Contrats
+
+```{r}
+contrats_xmls_extracted_tables$DocumXML |> print()
+contrats_xmls_extracted_tables$EveXML |> print()
+```
+
+## Projets
+
+```{r}
+projets_xmls_extracted_tables$ProjetXMLS |> print()
+```
+
+# Modèle de données résultant
+
+## Tables principales
+
+-   *Table PROJETS*
+
+    Clé primaire : code Données : Informations client, représentant, coordonnées de contact Usage : Table de référence pour les commandes et contrats
+
+-   *Table COMMANDES*
+
+    Clé primaire : code Clé étrangère : projet (référence vers PROJETS) Données : Informations commerciales, montants, taxes, statuts
+
+-   *Table CONTRATS*
+
+    Clé primaire : contrat_id Clé étrangère : projet (référence vers PROJETS) Données : Détails contractuels, comptoirs spécialisés, frais
+
+-   *Table KITS* (ensemble : kits , kitMur , etc...)
+
+    Clés étrangères : commande_id, contrat_id Données : Spécifications techniques détaillées des éléments (armoires, comptoirs, etc.)
+
+-   *Tables support*
+
+    ADRESSES : Coordonnées géographiques liées aux projets ETAPES : Suivi du workflow des commandes/contrats
+
+    LUMIERES : Éléments d'éclairage associés
+
+## Modèle relationnelle des données extraites
+
+```{dot}
+digraph BaseDonnees {
+  rankdir=LR;
+  node [shape=record, style=filled, fillcolor=lightgrey];
+
+  PROJETS [label="{PROJETS|code PK}"];
+  COMMANDES [label="{COMMANDES|code PK\lprojet FK}"];
+  CONTRATS [label="{CONTRATS|contrat_id PK\lprojet FK}"];
+  ADRESSES [label="{ADRESSES|code PK\lprojet_id FK}"];
+  KITS [label="{KITS|code PK\lcommande_id FK\lcontrat_id FK}"];
+  ETAPES [label="{ETAPES|id PK\lcommande_id FK\lcontrat_id FK}"];
+  LUMIERES [label="{LUMIERES |id PK\lcommande_id FK\lcontrat_id FK}"];
+
+  
+  PROJETS -> COMMANDES [label="contient"];
+  PROJETS -> CONTRATS [label="contient"];
+  PROJETS -> ADRESSES [label="possède"];
+
+  COMMANDES -> ETAPES [label="suit"];
+  CONTRATS -> ETAPES [label="suit"];
+
+  COMMANDES -> KITS [label="contient"];
+  CONTRATS -> KITS [label="contient"];
+  
+  COMMANDES -> LUMIERES [label="contient"];
+  CONTRATS -> LUMIERES [label="contient"];
+}
+```
+
+# Dictionnaire de données sélectionnées
+
+```{r echo=FALSE}
+library(dplyr)
+library(labelled)
+library(DT)
+library(tibble)
+source("C:/Users/18195/Documents/dunin/utils/extract/xml.R")
+show_dict <- function(df) {
+  # Récupérer les noms des colonnes et leurs labels
+  var_labels <- var_label(df)
+  # Créer un tibble pour afficher les noms des colonnes et les labels
+  dict_df <- tibble(
+    Champ = names(df),
+    Label = var_labels
+  )
+  # Afficher le tableau sous forme de DataTable interactive
+  datatable(dict_df, 
+            options = list(pageLength = 5), 
+            class = "compact stripe")
+}
+
+
+```
+
+## table commandes
+
+```{r echo=FALSE}
+# Sélection des variables commerciales
+vars_com <- c(
+  "code", "nomClient", "codeClient2", "typeClient",
+  "dateCreation", "dateValidite", "datePrevExped", "delaiPrevExped", "nbJourValide",
+  "statutCred", "validCred",
+  "total", "totalHT", "sousTotal", "sousTotal2",
+  "totalLivraison", "totalInstall", "totalCEM",
+  "qteItems", "qteItemsCab", "promotions",
+  "createurNom", "createurCourriel", "division", "projet",
+  "estImport", "estReprise", "estCQ",
+  "avecLivraison", "installation",
+  "totalTx1", "totalTx2", "ecartPrix", "solde"
+)
+###
+commandes__lbls <- tribble(
+  ~variable,        ~libellé,
+  "code",            "Code de la commande",
+  "nomClient",       "Nom du client",
+  "codeClient2",     "Code client",
+  "typeClient",      "Type de client",
+  "dateCreation",    "Date de création de la commande",
+  "dateValidite",    "Date de validité de l’offre",
+  "datePrevExped",   "Date d’expédition prévue",
+  "delaiPrevExped",  "Délai d’expédition prévu (jours)",
+  "nbJourValide",    "Nombre de jours de validité restants",
+  "statutCred",      "Statut crédit",
+  "validCred",       "Validation crédit",
+  "total",           "Total TTC de la commande",
+  "totalHT",         "Total HT de la commande",
+  "sousTotal",       "Sous-total général",
+  "sousTotal2",      "Sous-total intermédiaire (avec ajustements)",
+  "totalLivraison",  "Montant livraison",
+  "totalInstall",    "Montant installation",
+  "totalCEM",        "Montant CEM",
+  "qteItems",        "Quantité totale d’articles",
+  "qteItemsCab",     "Quantité d’articles en cabine",
+  "promotions",      "Promotions appliquées",
+  "createurNom",     "Nom du créateur de la commande",
+  "createurCourriel","Courriel du créateur",
+  "division",        "Division commerciale",
+  "projet",          "Nom du projet",
+  "estImport",       "Est une commande importée",
+  "estReprise",      "Est une reprise",
+  "estCQ",           "Contrôle qualité supérieur",
+  "avecLivraison",   "Avec livraison",
+  "installation",    "Avec installation",
+  "totalTx1",        "Montant taxe 1",
+  "totalTx2",        "Montant taxe 2",
+  "ecartPrix",       "Écart de prix",
+  "solde",           "Montant du solde"
+)
+###
+commandes <- commandes_xmls_extracted_tables$DocumXML$Comm |>  select(vars_com)
+commandes <- commandes |> set_variable_labels(.labels = deframe(commandes__lbls))
+###
+show_dict(commandes)
+
+```
+
+## table contrats
+
+```{r echo=FALSE}
+
+vars_con <- c(
+  "code", "codeClient2", "nomClient", "typeClient",
+  "dateCreation", "dateValidite", "datePrevExped", "delaiPrevExped", "nbJourValide",
+  "statutCred", "validCred", "projet", "division", "promotions",
+  "qteItems", "qteItemsCab", "total", "totalHT", "sousTotal", "sousTotal2",
+  "totalLivraison", "totalInstall", "totalComptoirBois", "totalComptoirGranite",
+  "totalComptoirQuartz", "totalComptoirStratifie", "totalEsc",
+  "ecartPrix", "montantEcartPrix", "fraisPSD", "fraisPDM", "fraisSAV",
+  "TotalEscompte", "avecLivraison", "installation", "createurNom",
+  "createurCourriel", "codePost", "codePostFinal",
+  "estReprise"
+)
+
+contrat_var_lib_tbl <- tibble::tribble(
+  ~variable,         ~libellé,
+  "code",             "Code du contrat",
+  "codeClient2",      "Code client",
+  "nomClient",        "Nom du client",
+  "typeClient",       "Type de client",
+  "dateCreation",     "Date de création du contrat",
+  "dateValidite",     "Date de validité de l’offre",
+  "datePrevExped",    "Date d’expédition prévue",
+  "delaiPrevExped",   "Délai d’expédition prévu (jours)",
+  "nbJourValide",     "Nombre de jours de validité restants",
+  "statutCred",       "Statut crédit",
+  "validCred",        "Validation crédit",
+  "projet",           "Nom du projet",
+  "division",         "Division commerciale",
+  "promotions",       "Promotions appliquées",
+  "qteItems",         "Quantité totale d’articles",
+  "qteItemsCab",      "Quantité d’articles en cabine",
+  "total",            "Total TTC du contrat",
+  "totalHT",          "Total HT du contrat",
+  "sousTotal",        "Sous-total général",
+  "sousTotal2",       "Sous-total intermédiaire (avec ajustements)",
+  "totalLivraison",   "Montant livraison",
+  "totalInstall",     "Montant installation",
+  "totalComptoirBois", "Total comptoir bois",
+  "totalComptoirGranite", "Total comptoir granite",
+  "totalComptoirQuartz", "Total comptoir quartz",
+  "totalComptoirStratifie", "Total comptoir stratifié",
+  "totalEsc",         "Total escaliers",
+  "ecartPrix",        "Écart de prix",
+  "montantEcartPrix", "Montant écart de prix",
+  "fraisPSD",         "Frais PSD",
+  "fraisPDM",         "Frais prise de mesure",
+  "fraisSAV",         "Frais SAV",
+  "TotalEscompte",    "Montant total escompte",
+  "avecLivraison",    "Avec livraison",
+  "installation",     "Avec installation",
+  "createurNom",      "Nom du créateur",
+  "createurCourriel", "Courriel du créateur",
+  "codePost",         "Code postal chantier",
+  "codePostFinal",    "Code postal livraison finale",
+  "estReprise",       "Est une reprise",
+  
+)
+
+###
+contrats <- contrats_xmls_extracted_tables$DocumXML$Contrat |>  select(vars_con)
+contrats <- contrats |> set_variable_labels(.labels = deframe(contrat_var_lib_tbl))
+###
+show_dict(contrats)
+
+
+```
+
+## table projets
+
+```{r echo=FALSE}
+vars_proj <- c(
+  "code", "client", "marche",
+  "codeRepresentant", "nomRepresentant",
+  "dateCreation", "division",
+  "ciClient", "courrielContact", "nomContact", "telephoneContact",
+  "coordsCommTxt", "coordsExpedTxt", "coordsFactTxt",
+  "estReprise", "enFusion",
+  "createurNom", "createurCourriel"
+)
+
+proj_var_lib_tbl <- tribble(
+  ~variable,         ~libellé,
+  "code",             "Code du document / BL",
+  "client",           "Nom du client",
+  "marche",           "Marché / pays",
+  "codeRepresentant", "Code représentant",
+  "nomRepresentant",  "Nom représentant",
+  "dateCreation",     "Date de création",
+  "division",         "Division commerciale",
+  "ciClient",         "Code installation client",
+  "courrielContact",  "Courriel du contact",
+  "nomContact",       "Nom du contact",
+  "telephoneContact", "Téléphone du contact",
+  "coordsCommTxt",    "Adresse de commande (texte)",
+  "coordsExpedTxt",   "Adresse d’expédition (texte)",
+  "coordsFactTxt",    "Adresse de facturation (texte)",
+  "estReprise",       "Est une reprise",
+  "enFusion",         "En fusion",
+  "createurNom",      "Nom du créateur",
+  "createurCourriel", "Courriel du créateur"
+)
+
+###
+projets <- projets_xmls_extracted_tables$Projet |>  select(vars_proj)
+projets <- projets |> set_variable_labels(.labels = deframe(proj_var_lib_tbl))
+###
+show_dict(projets)
+
+
+```
+
+## table kits { kit , kitMur , KitPlafond,....}
+
+```{r echo=FALSE}
+library(tibble)
+
+vars_kit <- c(
+  "code", "nom", "qte", "qteTr", "typeKit", "unit",
+  "sousTotalKit", "sousTotalKitEff", "sousTotal", "sousTotalEff",
+  "totalComptoir", "totalComptoirEff", "nbComptoir", "longComptoir",
+  "surfaceComptoir", "cumulComptoir", "extraComptoir",
+  "comptoirMod", "comptoirCouleur", "comptoirGpCouleur",
+  "sousTotalCab", "sousTotalPanel", "sousTotalMoulure", "sousTotalAutre",
+  "assemblage", "gamme", "serie", "finishColor", "edgeColle", "edgeBanding",
+  "bd_edgeBanding", "df_edgeBanding", "wd_edgeBanding", "edgePorte",
+  "edgeTablette", "handle", "handleOri", "bd_handle", "bd_handleOri",
+  "df_handle", "df_handleOri", "cabDesign", "cabConstruct", "cabHinge",
+  "cabWallProf", "t_cabWallProf", "cabHautComptoir", "t_cabHautComptoir",
+  "cabDegagementWall", "t_cabDegagementWall", "cabToeKickHeight",
+  "t_cabToeKickHeight", "cabToeKickProf", "t_cabToeKickProf",
+  "cabToeKickType", "cabAlignBase", "t_cabAlignBase", "cabTallHeightAlign",
+  "t_cabTallHeightAlign", "cabTypeComptoir", "tabletteType", "drawerConst",
+  "drawerSlide", "matPatte", "patteAchetee", "equerre", "cacheNeon",
+  "beamModele", "beamHeight", "t_beamHeight", "ligne", "contrat_id","commande_id",
+  "estBloqPrix", "estPrixAdmin", "estExtra", "enErreur", "signature",
+  "kitUtilisation", "specie", "bd_specie", "df_specie", "bd_serie",
+  "df_serie", "bd_finishColor", "df_finishColor", "porteModeleB",
+  "porteModeleH", "porteModeleFacadeB", "porteModeleFacadeH",
+  "porteModeleBSensGrain", "porteModeleHSensGrain",
+  "porteModeleFacadeBSensGrain", "porteModeleFacadeHSensGrain",
+  "porteModeleB_epais", "t_porteModeleB_epais", "porteModeleH_epais",
+  "t_porteModeleH_epais", "porteModeleFacadeB_epais",
+  "t_porteModeleFacadeB_epais", "porteModeleFacadeH_epais",
+  "t_porteModeleFacadeH_epais", "moulLumModele", "moulLumHeight",
+  "t_moulLumHeight", "moulPiedModele", "moulPiedHeight",
+  "t_moulPiedHeight", "detailSection", "aBomCustom", "couleurEstBois",
+   "items","typeColor"
+)
+
+
+kit_var_lib_tbl <- tribble(
+  ~variable,               ~libellé,
+  "code",                   "Code du kit",
+  "nom",                    "Libellé du kit",
+  "qte",                    "Quantité",
+  "qteTr",                  "Quantité (unité de traitement)",
+  "typeKit",                "Type de kit",
+  "unit",                   "Unité de mesure",
+  "sousTotalKit",           "Sous-total du kit",
+  "sousTotalKitEff",        "Sous-total du kit (valeur effective)",
+  "sousTotal",              "Sous-total général",
+  "sousTotalEff",           "Sous-total général (valeur effective)",
+  "totalComptoir",          "Total comptoir",
+  "totalComptoirEff",       "Total comptoir (valeur effective)",
+  "nbComptoir",             "Nombre de comptoirs",
+  "longComptoir",           "Longueur comptoir",
+  "surfaceComptoir",        "Surface comptoir",
+  "cumulComptoir",          "Cumul comptoir",
+  "extraComptoir",          "Extra comptoir",
+  "comptoirMod",            "Modèle comptoir",
+  "comptoirCouleur",        "Couleur comptoir",
+  "comptoirGpCouleur",      "Groupe couleur comptoir",
+  "sousTotalCab",           "Sous-total cabine",
+  "sousTotalPanel",         "Sous-total panneaux",
+  "sousTotalMoulure",       "Sous-total moulures",
+  "sousTotalAutre",         "Sous-total autres éléments",
+  "assemblage",             "Avec assemblage",
+  "gamme",                  "Gamme produit",
+  "serie",                  "Série",
+  "finishColor",            "Couleur fini",
+  "edgeColle",              "Bordure collée",
+  "edgeBanding",            "Ruban de chant",
+  "bd_edgeBanding",         "Ruban chant – porte BD",
+  "df_edgeBanding",         "Ruban chant – porte DF",
+  "wd_edgeBanding",         "Ruban chant – porte WD",
+  "edgePorte",              "Bordure porte",
+  "edgeTablette",           "Bordure tablette",
+  "handle",                 "Poignée",
+  "handleOri",              "Orientation poignée",
+  "bd_handle",              "Poignée – porte BD",
+  "bd_handleOri",           "Orientation poignée – porte BD",
+  "df_handle",              "Poignée – porte DF",
+  "df_handleOri",           "Orientation poignée – porte DF",
+  "cabDesign",              "Design armoire",
+  "cabConstruct",           "Construction armoire",
+  "cabHinge",               "Type charnière",
+  "cabWallProf",            "Profondeur armoire murale",
+  "t_cabWallProf",          "Profondeur armoire murale (texte)",
+  "cabHautComptoir",        "Hauteur armoire sous-comptoir",
+  "t_cabHautComptoir",      "Hauteur armoire sous-comptoir (texte)",
+  "cabDegagementWall",      "Dégagement mur armoire",
+  "t_cabDegagementWall",    "Dégagement mur armoire (texte)",
+  "cabToeKickHeight",       "Hauteur plinthe",
+  "t_cabToeKickHeight",     "Hauteur plinthe (texte)",
+  "cabToeKickProf",         "Profondeur plinthe",
+  "t_cabToeKickProf",       "Profondeur plinthe (texte)",
+  "cabToeKickType",         "Type plinthe",
+  "cabAlignBase",           "Alignement base armoire",
+  "t_cabAlignBase",         "Alignement base armoire (texte)",
+  "cabTallHeightAlign",     "Alignement hauteur armoire haute",
+  "t_cabTallHeightAlign",   "Alignement hauteur armoire haute (texte)",
+  "cabTypeComptoir",        "Type comptoir armoire",
+  "tabletteType",           "Type tablette",
+  "drawerConst",            "Construction tiroir",
+  "drawerSlide",            "Glissière tiroir",
+  "matPatte",               "Matériau patte",
+  "patteAchetee",           "Patte achetée",
+  "equerre",                "Équerre",
+  "cacheNeon",              "Cache néon",
+  "beamModele",             "Modèle poutre",
+  "beamHeight",             "Hauteur poutre",
+  "t_beamHeight",           "Hauteur poutre (texte)",
+  "ligne",                  "Numéro de ligne",
+  "contrat_id",             "Identifiant contrat",
+  "commande_id",            "Identifiant commande",
+  "estBloqPrix",            "Prix bloqué",
+  "estPrixAdmin",           "Prix administrateur",
+  "estExtra",               "Est extra",
+  "enErreur",               "En erreur",
+  "signature",              "Signature",
+  "kitUtilisation",         "Utilisation kit",
+  "specie",                 "Essence bois",
+  "bd_specie",              "Essence bois – porte BD",
+  "df_specie",              "Essence bois – porte DF",
+  "bd_serie",               "Série – porte BD",
+  "df_serie",               "Série – porte DF",
+  "bd_finishColor",         "Couleur fini – porte BD",
+  "df_finishColor",         "Couleur fini – porte DF",
+  "porteModeleB",           "Modèle porte basse",
+  "porteModeleH",           "Modèle porte haute",
+  "porteModeleFacadeB",     "Modèle façade porte basse",
+  "porteModeleFacadeH",     "Modèle façade porte haute",
+  "porteModeleBSensGrain",  "Sens veinage porte basse",
+  "porteModeleHSensGrain",  "Sens veinage porte haute",
+  "porteModeleFacadeBSensGrain", "Sens veinage façade porte basse",
+  "porteModeleFacadeHSensGrain", "Sens veinage façade porte haute",
+  "porteModeleB_epais",     "Épaisseur porte basse",
+  "t_porteModeleB_epais",   "Épaisseur porte basse (texte)",
+  "porteModeleH_epais",     "Épaisseur porte haute",
+  "t_porteModeleH_epais",   "Épaisseur porte haute (texte)",
+  "porteModeleFacadeB_epais", "Épaisseur façade porte basse",
+  "t_porteModeleFacadeB_epais", "Épaisseur façade porte basse (texte)",
+  "porteModeleFacadeH_epais", "Épaisseur façade porte haute",
+  "t_porteModeleFacadeH_epais", "Épaisseur façade porte haute (texte)",
+  "moulLumModele",          "Modèle moulure lumière",
+  "moulLumHeight",          "Hauteur moulure lumière",
+  "t_moulLumHeight",        "Hauteur moulure lumière (texte)",
+  "moulPiedModele",         "Modèle moulure pied",
+  "moulPiedHeight",         "Hauteur moulure pied",
+  "t_moulPiedHeight",       "Hauteur moulure pied (texte)",
+  "detailSection",          "Détail section",
+  "aBomCustom",             "BOM personnalisé",
+  "couleurEstBois",         "Couleur estimée bois",
+  "items",                  "Liste items",
+  "typeColor",              "type  couleur" 
+)
+###
+kits_contrats <- bind_tables_about(contrats_xmls_extracted_tables$EveXML,'Kit')
+kits_commandes <- bind_tables_about(commandes_xmls_extracted_tables$EveXML,'Kit')
+###
+kits <- bind_rows(kits_contrats,kits_commandes) |>  select(vars_kit)
+kits <- kits |> set_variable_labels(.labels = deframe(kit_var_lib_tbl))
+###
+show_dict(kits)
+
+```
+
+## table etapes
+
+```{r echo=FALSE}
+etapes <- bind_rows(commandes_xmls_extracted_tables$DocumXML$Etape,contrats_xmls_extracted_tables$DocumXML$Etape)
+
+vars_etapes <- c(
+  "createur", "dateCreation", "emplacement",
+  "statut", "tempsCreation", "commande_id", "contrat_id"
+)
+
+
+etape_var_lib_tbl <- tribble(
+  ~variable,      ~libellé,
+  "createur",     "Nom du créateur",
+  "dateCreation", "Date de création",
+  "emplacement",  "Emplacement",
+  "statut",       "Statut",
+  "tempsCreation","Temps de création",
+  "commande_id",  "Identifiant commande",
+  "contrat_id",   "Identifiant contrat"
+)
+
+etapes <- etapes |>  select(vars_etapes)
+etapes <- etapes |> set_variable_labels(.labels = deframe(etape_var_lib_tbl))
+###
+show_dict(etapes)
+
+```
+
+## tables addresses
+
+```{r echo=FALSE}
+
+adresses <- projets_xmls_extracted_tables$AdrCivique
+vars_adresse <- c(
+  "codePost", "etatProv", "ligne1", "ligne2", "pays", "region", "ville",
+  "usage", "code", "sorte", "projet_id", "nom", "estJS", "contact"
+)
+
+adresse_var_lib_tbl <- tribble(
+  ~variable,   ~libellé,
+  "codePost",  "Code postal",
+  "etatProv",  "État / Province",
+  "ligne1",    "Adresse ligne 1",
+  "ligne2",    "Adresse ligne 2",
+  "pays",      "Pays",
+  "region",    "Région",
+  "ville",     "Ville",
+  "usage",     "Usage (expédition / facturation / chantier)",
+  "code",      "Code de l’adresse",
+  "sorte",     "Type d’adresse",
+  "projet_id", "Identifiant projet",
+  "nom",       "Libellé ou nom de l’adresse",
+  "estJS",     "Est une adresse chantier (jobsite)",
+  "contact",   "Contact associé"
+)
+
+# 1) Sélectionner uniquement les variables d'intérêt
+adresses <- adresses %>% select(all_of(vars_adresse))
+
+# 2) Appliquer les libellés
+adresses <- adresses %>% set_variable_labels(.labels = deframe(adresse_var_lib_tbl))
+
+# 3) Afficher le dictionnaire
+show_dict(adresses)
+
+```
+
+## lumière
+
+```{r echo=FALSE}
+vars_lum <- c(
+  "modele", "qte", "contrat_id"
+ 
+)
+###
+lumiere_lbls <- tribble(
+  ~variable,        ~libellé,
+  "modele",         "modèle lumière",
+  "qte",            "quantité",
+  "contrat_id",     " identifiant contrat"
+  )
+# 1) Sélectionner uniquement les variables d'intérêt
+lumieres <- contrats_xmls_extracted_tables$DocumXML$Lumiere %>% select(all_of(vars_lum))
+
+# 2) Appliquer les libellés
+lumieres <- lumieres %>% set_variable_labels(.labels = deframe(lumiere_lbls))
+
+# 3) Afficher le dictionnaire
+show_dict(lumieres)
+
+```
+
+```{r eval=FALSE}
+save(projets,file="data/processed/projets.RData")
+save(commandes,file="data/processed/commandes.RData")
+save(contrats,file="data/processed/contrats.RData")
+save(kits,file="data/processed/kits.RData")
+save(adresses,file="data/processed/adresses.RData")
+save(etapes,file="data/processed/etapes.RData")
+save(lumieres,file="data/processed/lumieres.RData")
+```
+
+```{r}
+
+```
+
+# conclusion
+
+Ce processus d'extraction transforme efficacement les structures XML complexes en un modèle relationnel exploitable, préservant l'intégrité des données tout en optimisant leur accessibilité pour l'analyse business.

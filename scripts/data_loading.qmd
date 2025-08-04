@@ -1,0 +1,844 @@
+# Chargement des données
+
+Cette phase finale du processus ETL transforme les données nettoyées en un modèle dimensionnel optimisé pour l'analyse business. L'architecture suit une approche en étoile, séparant clairement les dimensions des faits pour optimiser les performances analytiques.
+
+```{r}
+
+load("C:/Users/18195/Documents/dunin/data/cleaned/projets_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/commandes_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/contrats_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/kits_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/adresses_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/etapes_clean.RData")
+load("C:/Users/18195/Documents/dunin/data/cleaned/lumieres_clean.RData")
+
+library(dplyr)
+
+```
+
+## Architecture du Data Warehouse
+
+## Philosophie de modélisation
+
+Le modèle adopte une **architecture en étoile** avec : - **Table de fait centrale** : `transactions` consolidant commandes et contrats - **Tables de dimensions** : Contexte analytique (dates, clients, projets, etc.) - **Tables de faits secondaires** : Détails techniques (kits, étapes, éclairage)
+
+Cette approche garantit : - **Performance** : Requêtes analytiques optimisées - **Simplicité** : Structure intuitive pour les utilisateurs business - **Flexibilité** : Évolution facile du modèle - **Gestion des clés** : Remplacement des dates par des clés techniques pour optimisation des performances.
+
+## Tables de dimensions
+
+### DIM_DATES - Dimension temporelle universelle
+
+``` sql
+Structure :
+- date_id (PK) : Clé technique au format YYYYMMDD
+- date : Date calendaire
+- annee, mois, jour : Composants temporels
+- nom_mois, nom_jour : Libellés français
+- jour_semaine : Numérotation ISO (1=lundi, 7=dimanche)
+```
+
+**Innovation technique** : Construction automatisée à partir de toutes les dates présentes dans le système, garantissant la complétude du référentiel temporel.
+
+**Usage business** : Permet l'analyse temporelle (tendances, saisonnalité, comparaisons d'périodes).
+
+### DIM_CLIENTS - Dimension client consolidée
+
+``` sql
+Structure :
+- client_id (PK) : Identifiant unique
+- nom : Dénomination client
+- type : Catégorie client (particulier, professionnel, etc.)
+- transaction_id (FK) : Lien vers transactions
+```
+
+**Consolidation** : Fusion des données clients provenant des commandes et contrats pour une vue unifiée.
+
+### DIM_PROJETS - Contexte projet enrichi
+
+``` sql
+Structure :
+- projet_id (PK) : Code projet
+- marche : Marché géographique
+- division : Division commerciale
+- contacts : Informations de contact complètes
+- indicateurs : Statuts (reprise, fusion)
+```
+
+**Valeur ajoutée** : Table de référence centrale connectant tous les éléments du projet.
+
+### DIM_REPRESENTANTS - Force de vente
+
+``` sql
+Structure :
+- representant_id (PK) : Identifiant unique
+- nom, codeRepresentant : Identification commerciale
+- projet_id (FK) : Rattachement projet
+```
+
+**Usage business** : Analyse des performances commerciales par représentant.
+
+### DIM_ADRESSES - Géolocalisation
+
+``` sql
+Structure :
+- adresse_id (PK) : Identifiant unique
+- ville, region, pays : Hiérarchie géographique
+- usage : Type d'adresse (livraison, facturation, chantier)
+- projet_id (FK) : Rattachement projet
+```
+
+**Usage business** : Analyses territoriales et logistiques.
+
+## Table de fait principale
+
+### TRANSACTIONS - Cœur analytique
+
+``` sql
+Structure principale :
+- transaction_id (PK) : Identifiant unique
+- projet_id (FK) : Lien dimension projet
+- date_*_id (FK) : Liens multiples vers dimension dates
+- Métriques financières : total, totalHT, etc.
+- Métriques opérationnelles : quantités, statuts,etc
+```
+
+**Innovation de modélisation** : - **Fusion intelligente** : Commandes et contrats dans une même structure - **Références temporelles multiples** : Création, validité, expédition - **Métriques business** : KPIs directement exploitables
+
+**Avantages analytiques** : - Vue consolidée des transactions - Analyses comparatives commandes vs contrats - Suivi temporel multi-dimensionnel
+
+## Tables de faits secondaires
+
+### FACT_KITS - Détail technique produit
+
+**Granularité** : Un enregistrement par kit/composant **Métriques** : Sous-totaux, spécifications techniques **Usage** : Analyse détaillée des configurations produit
+
+### FACT_ETAPES - Workflow opérationnel
+
+**Granularité** : Un enregistrement par étape de processus **Métriques** : Temps de traitement, statuts d'avancement **Usage** : Optimisation des processus, suivi de production
+
+### FACT_LUMIERES - Éléments d'éclairage
+
+**Granularité** : Un enregistrement par modèle d'éclairage **Métriques** : Quantités par modèle **Usage** : Gestion des catalogues, analyse des préférences
+
+## Bénéfices du modèle dimensionnel
+
+### Performance analytique
+
+-   **Requêtes optimisées** : Structure dénormalisée adaptée à l'OLAP
+-   **Indexes implicites** : Clés dimensionnelles facilitent l'indexation
+-   **Jointures simples** : Architecture en étoile = jointures 1-N uniquement
+
+### Facilité d'usage business
+
+-   **Évolutivité** : Ajout de dimensions sans impact sur l'existant
+
+
+## Métriques et KPIs disponibles
+
+### Analyses temporelles
+
+-   Évolution CA par période (jour/mois/année)
+-   Saisonnalité des commandes
+-   Délais moyens par type de transaction
+etc
+
+### Analyses commerciales
+
+-   Performance par représentant
+-   Répartition géographique du CA
+-   Segmentation client (récence, fréquence, montant)
+etc
+
+### Analyses opérationnelles
+
+-   Temps de traitement par étape
+-   Taux de transformation commande→contrat
+-   Analyse des configurations techniques (kits)
+etc
+
+# implementation
+
+## dimensions
+
+### dates
+
+```{r}
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+transactions <- bind_rows(commandes_clean,contrats_clean)
+
+# Étape 1 : Extraire toutes les colonnes contenant "date" et les fusionner proprement
+all_dates_df <- list(
+  commandes_clean,
+  contrats_clean,
+  kits_clean,
+  adresses_clean,
+  etapes_clean,
+  projets_clean,
+  lumieres_clean
+) |>
+  map(~ select(.x, contains("date"))) |>
+  bind_rows() |>
+  pivot_longer(everything(), values_drop_na = TRUE, names_to = "type_date") |>
+  distinct(value) |>
+  filter(lubridate::is.Date(value) | lubridate::is.POSIXt(value))  # On garde 
+
+# Étape 2 : Créer la table dim_date
+dim_dates <- all_dates_df |>
+  transmute(
+    date_id     = as.integer(format(value, "%Y%m%d")),
+    date         = as.Date(value),
+    annee        = as.integer(format(value, "%Y")),
+    mois         = as.integer(format(value, "%m")),
+    nom_mois     = format(value, "%B"),
+    jour         = as.integer(format(value, "%d")),
+    jour_semaine = as.integer(format(value, "%u")),
+    nom_jour     = format(value, "%A")
+  ) |>
+  distinct() |>
+  arrange(date)
+
+```
+
+### dim client
+
+```{r}
+dim_clients <- transactions |> bind_rows(commandes_clean) |> transmute(
+  client_id = row_number(),
+  nom = nomClient,
+  type = typeClient,
+  transaction_id = code
+) |> select(where(~ !inherits(.x, "Date")))
+```
+
+### dim representant
+
+```{r}
+dim_representants <- projets_clean |> transmute(
+  representant_id = row_number(),
+  nom = nomRepresentant,
+  codeRepresentant = codeRepresentant,
+  projet_id = code
+) |> select(where(~ !inherits(.x, "Date")))
+```
+
+### dim adresses
+
+```{r}
+dim_adresses  <- adresses_clean |> mutate(
+  adresse_id = row_number()
+) |> select(where(~ !inherits(.x, "Date")))
+
+```
+
+### dim projet
+
+```{r}
+
+dim_projets <- projets_clean %>%
+  select(where(~ !inherits(.x, "Date"))) %>%   # exclure les colonnes Date
+  select(!contains(c("client", "Representant"))) |>
+  rename(projet_id = code)
+  # exclure les colonnes qui 
+  
+```
+
+### tables des faits
+
+```{r}
+transactions <- bind_rows(commandes_clean,contrats_clean)
+
+# Associer chaque date de transactions à un date_id
+transactions <- transactions |>
+  left_join(dim_dates |> select(date_id, date), by = c("dateCreation" = "date")) |>
+  rename(date_creation_id = date_id) |>
+  left_join(dim_dates |> select(date_id, date), by = c("dateValidite" = "date")) |>
+  rename(date_validite_id = date_id) |>
+  left_join(dim_dates |> select(date_id, date), by = c("datePrevExped" = "date")) |>
+  rename(date_prev_exped_id = date_id)
+
+transactions <- transactions |> select(where(~ !inherits(.x, "Date")))
+transactions <- transactions |> rename(projet_id = projet)
+```
+
+### kits
+
+```{r}
+fact_kits <-kits_clean |>  select(where(~ !inherits(.x, "Date")))
+```
+
+### etapes
+
+```{r}
+
+fact_etapes <-etapes_clean |>  select(where(~ !inherits(.x, "Date")))
+```
+
+### lumieres
+
+```{r}
+fact_lumieres <-lumieres_clean |>  select(where(~ !inherits(.x, "Date")))
+```
+
+# Modélisation Dimensionnelle et Data Warehouse
+
+```{mermaid}
+erDiagram
+
+    %% =========================
+    %% DIMENSIONS
+    %% =========================
+
+    dim_dates {
+        INT date_id PK
+        DATE date
+        INT annee
+        INT mois
+        STRING nom_mois
+        INT jour
+        INT jour_semaine
+        STRING nom_jour
+    }
+
+    dim_clients {
+        INT client_id PK
+        STRING nom
+        STRING type
+        INT transaction_id FK
+    }
+
+    dim_projets {
+        INT projet_id PK
+        STRING marche
+        STRING division
+        STRING courrielContact
+        STRING nomContact
+        STRING telephoneContact
+        BOOLEAN estReprise
+        BOOLEAN enFusion
+    }
+
+    dim_representants {
+        INT representant_id PK
+        STRING nom
+        STRING codeRepresentant
+        INT projet_id FK
+    }
+
+    dim_adresses {
+        INT adresse_id PK
+        STRING ville
+        STRING region
+        STRING pays
+        STRING usage
+        INT projet_id FK
+    }
+
+    %% =========================
+    %% TABLE DE FAIT PRINCIPALE
+    %% =========================
+
+    transactions {
+        INT transaction_id PK
+        INT projet_id FK
+        INT date_creation_id FK
+        INT date_validite_id FK
+        INT date_prev_exped_id FK
+        FLOAT total
+        FLOAT totalHT
+        INT qteItems
+        STRING statutCred
+    }
+
+    %% =========================
+    %% TABLES DE FAIT DÉTAILLÉES
+    %% =========================
+
+    fact_kits {
+        STRING code
+        STRING nom
+        INT commande_id
+        INT contrat_id
+        FLOAT sousTotal
+        STRING typeKit
+    }
+
+    fact_etapes {
+        INT etape_id PK
+        STRING createur
+        STRING emplacement
+        STRING statut
+        DATETIME tempsCreation
+        INT commande_id
+        INT contrat_id
+    }
+
+    fact_lumieres {
+        STRING modele
+        INT qte
+        INT contrat_id
+    }
+
+    %% =========================
+    %% RELATIONS
+    %% =========================
+
+    transactions ||--o{ dim_dates : date_creation_id
+    transactions ||--o{ dim_dates : date_validite_id
+    transactions ||--o{ dim_dates : date_prev_exped_id
+    transactions ||--o{ dim_projets : projet_id
+    dim_projets ||--o{ dim_clients : projet_id
+    dim_projets ||--o{ dim_representants : projet_id
+    dim_projets ||--o{ dim_adresses : projet_id
+
+    fact_kits ||--o{ transactions : commande_id
+    fact_kits ||--o{ transactions : contrat_id
+
+    fact_etapes ||--o{ transactions : commande_id
+    fact_etapes ||--o{ transactions : contrat_id
+
+    fact_lumieres ||--o{ transactions : contrat_id
+```
+
+```{sql eval=FALSE}
+-- ============================================================================
+-- SCRIPT DE CR�ATION DU DATA WAREHOUSE DUNIN_DWH
+--
+-- ============================================================================
+
+-- Cr�ation de la base de donn�es
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'DUNIN_DWH')
+BEGIN
+    CREATE DATABASE DUNIN_DWH;
+    PRINT 'Base de donn�es DUNIN_DWH cr��e avec succ�s.';
+END
+ELSE
+BEGIN
+    PRINT 'Base de donn�es DUNIN_DWH existe d�j�.';
+END
+GO
+
+USE DUNIN_DWH;
+GO
+
+-- ============================================================================
+-- SUPPRESSION DES TABLES EXISTANTES (pour r�initialisation compl�te)
+-- ============================================================================
+
+-- Suppression des tables de faits (d�pendantes)
+IF OBJECT_ID('dbo.fact_etapes', 'U') IS NOT NULL DROP TABLE dbo.fact_etapes;
+IF OBJECT_ID('dbo.fact_lumieres', 'U') IS NOT NULL DROP TABLE dbo.fact_lumieres;
+IF OBJECT_ID('dbo.fact_kits', 'U') IS NOT NULL DROP TABLE dbo.fact_kits;
+IF OBJECT_ID('dbo.transactions', 'U') IS NOT NULL DROP TABLE dbo.transactions;
+
+-- Suppression des tables de dimensions
+IF OBJECT_ID('dbo.dim_clients', 'U') IS NOT NULL DROP TABLE dbo.dim_clients;
+IF OBJECT_ID('dbo.dim_representants', 'U') IS NOT NULL DROP TABLE dbo.dim_representants;
+IF OBJECT_ID('dbo.dim_adresses', 'U') IS NOT NULL DROP TABLE dbo.dim_adresses;
+IF OBJECT_ID('dbo.dim_projets', 'U') IS NOT NULL DROP TABLE dbo.dim_projets;
+IF OBJECT_ID('dbo.dim_dates', 'U') IS NOT NULL DROP TABLE dbo.dim_dates;
+
+PRINT 'Tables existantes supprim�es.';
+GO
+
+-- ============================================================================
+-- CR�ATION DES TABLES DE DIMENSIONS
+-- ============================================================================
+
+-- -----------------------------
+-- DIMENSION DATES
+-- -----------------------------
+CREATE TABLE dbo.dim_dates (
+    date_id         INT PRIMARY KEY,
+    date            DATE NOT NULL,
+    annee           INT NOT NULL,
+    mois            INT NOT NULL,
+    nom_mois        NVARCHAR(20) NOT NULL,
+    jour            INT NOT NULL,
+    jour_semaine    INT NOT NULL,
+    nom_jour        NVARCHAR(20) NOT NULL,
+    
+);
+
+
+-- -----------------------------
+-- DIMENSION CLIENTS
+-- -----------------------------
+CREATE TABLE dbo.dim_clients (
+    client_id       INT IDENTITY(1,1) PRIMARY KEY,
+    nom             NVARCHAR(255) NULL,
+    type            NVARCHAR(100) NULL,
+    transaction_id  NVARCHAR(50) NULL,
+);
+
+PRINT 'Table dim_clients cr��e.';
+
+-- -----------------------------
+-- DIMENSION PROJETS
+-- -----------------------------
+CREATE TABLE dbo.dim_projets (
+    projet_id           NVARCHAR(50) PRIMARY KEY,
+    marche              NVARCHAR(100) NULL,
+    division            NVARCHAR(100) NULL,
+    courrielContact     NVARCHAR(255) NULL,
+    nomContact          NVARCHAR(255) NULL,
+    telephoneContact    NVARCHAR(50) NULL,
+    coordsCommTxt       NVARCHAR(500) NULL,
+    coordsExpedTxt      NVARCHAR(500) NULL,
+    coordsFactTxt       NVARCHAR(500) NULL,
+    estReprise          BIT DEFAULT 0,
+    enFusion            BIT DEFAULT 0,
+    createurNom         NVARCHAR(255) NULL,
+    createurCourriel    NVARCHAR(255) NULL,
+);
+
+
+-- -----------------------------
+-- DIMENSION REPRESENTANTS
+-- -----------------------------
+CREATE TABLE dbo.dim_representants (
+    representant_id     INT IDENTITY(1,1) PRIMARY KEY,
+    nom                 NVARCHAR(255) NULL,
+    codeRepresentant    NVARCHAR(50) NULL,
+    projet_id           NVARCHAR(50) NULL,
+    -- Cl� �trang�re
+    CONSTRAINT FK_dim_representants_projet 
+        FOREIGN KEY (projet_id) REFERENCES dbo.dim_projets(projet_id)
+);
+
+PRINT 'Table dim_representants cr��e.';
+
+-- -----------------------------
+-- DIMENSION ADRESSES
+-- -----------------------------
+CREATE TABLE dbo.dim_adresses (
+    adresse_id      INT IDENTITY(1,1) PRIMARY KEY,
+    codePost        NVARCHAR(20) NULL,
+    etatProv        NVARCHAR(100) NULL,
+    ligne1          NVARCHAR(500) NULL,
+    ligne2          NVARCHAR(500) NULL,
+    pays            NVARCHAR(100) NULL,
+    region          NVARCHAR(100) NULL,
+    ville           NVARCHAR(100) NULL,
+    usage           NVARCHAR(50) NULL,
+    code            NVARCHAR(50) NULL,
+    sorte           NVARCHAR(50) NULL,
+    projet_id       NVARCHAR(50) NULL,
+    nom             NVARCHAR(255) NULL,
+    contact         NVARCHAR(255) NULL,
+    
+    -- Cl� �trang�re
+    CONSTRAINT FK_dim_adresses_projet 
+        FOREIGN KEY (projet_id) REFERENCES dbo.dim_projets(projet_id)
+);
+
+-- ============================================================================
+-- CR�ATION DE LA TABLE DE FAIT PRINCIPALE
+-- ============================================================================
+
+-- -----------------------------
+-- TRANSACTIONS (Fait principal)
+-- -----------------------------
+CREATE TABLE dbo.transactions (
+    transaction_id          NVARCHAR(50) PRIMARY KEY,
+    
+    -- Cl�s �trang�res vers dimensions
+    projet_id               NVARCHAR(50) NULL,
+    date_creation_id        INT NULL,
+    date_validite_id        INT NULL,
+    date_prev_exped_id      INT NULL,
+    
+    -- Informations client (d�normalis� pour performance)
+    nomClient               NVARCHAR(255) NULL,
+    codeClient2             NVARCHAR(50) NULL,
+    typeClient              NVARCHAR(100) NULL,
+    
+    -- M�triques temporelles
+    delaiPrevExped          DECIMAL(10,2) NULL,
+    nbJourValide            DECIMAL(10,2) NULL,
+    
+    -- Statuts et indicateurs
+    statutCred              BIT DEFAULT 0,
+    validCred               BIT DEFAULT 0,
+    estImport               BIT DEFAULT 0,
+    estReprise              BIT DEFAULT 0,
+    estCQ                   BIT DEFAULT 0,
+    avecLivraison           BIT DEFAULT 0,
+    installation            BIT DEFAULT 0,
+    psd                     BIT DEFAULT 0,
+    
+    -- M�triques financi�res principales
+    total                   DECIMAL(15,2) NULL,
+    totalHT                 DECIMAL(15,2) NULL,
+    sousTotal               DECIMAL(15,2) NULL,
+    sousTotal2              DECIMAL(15,2) NULL,
+    
+    -- M�triques de services
+    totalLivraison          DECIMAL(15,2) NULL,
+    totalInstall            DECIMAL(15,2) NULL,
+    totalCEM                DECIMAL(15,2) NULL,
+    
+    -- M�triques de quantit�
+    qteItems                DECIMAL(10,2) NULL,
+    qteItemsCab             DECIMAL(10,2) NULL,
+    promotions              DECIMAL(15,2) NULL,
+    
+    -- Informations cr�ation
+    createurNom             NVARCHAR(255) NULL,
+    createurCourriel        NVARCHAR(255) NULL,
+    division                NVARCHAR(100) NULL,
+    
+    -- Taxes et ajustements
+    totalTx1                DECIMAL(15,2) NULL,
+    totalTx2                DECIMAL(15,2) NULL,
+    ecartPrix               DECIMAL(15,2) NULL,
+    solde                   DECIMAL(15,2) NULL,
+    
+    -- Sp�cificit�s contrats (comptoirs)
+    totalComptoirBois       DECIMAL(15,2) NULL,
+    totalComptoirGranite    DECIMAL(15,2) NULL,
+    totalComptoirQuartz     DECIMAL(15,2) NULL,
+    totalComptoirStratifie  DECIMAL(15,2) NULL,
+    totalEsc                DECIMAL(15,2) NULL,
+    montantEcartPrix        DECIMAL(15,2) NULL,
+    
+    -- Frais sp�cialis�s
+    fraisPSD                DECIMAL(15,2) NULL,
+    fraisPDM                DECIMAL(15,2) NULL,
+    fraisSAV                DECIMAL(15,2) NULL,
+    TotalEscompte           DECIMAL(15,2) NULL,
+    
+    -- Codes postaux
+    codePost                NVARCHAR(20) NULL,
+    codePostFinal           NVARCHAR(20) NULL,
+    
+  
+   
+    -- Cl�s �trang�res
+    CONSTRAINT FK_transactions_projet 
+        FOREIGN KEY (projet_id) REFERENCES dbo.dim_projets(projet_id),
+    CONSTRAINT FK_transactions_date_creation 
+        FOREIGN KEY (date_creation_id) REFERENCES dbo.dim_dates(date_id),
+    CONSTRAINT FK_transactions_date_validite 
+        FOREIGN KEY (date_validite_id) REFERENCES dbo.dim_dates(date_id),
+    CONSTRAINT FK_transactions_date_exped 
+        FOREIGN KEY (date_prev_exped_id) REFERENCES dbo.dim_dates(date_id)
+);
+
+
+-- ============================================================================
+-- CR�ATION DES TABLES DE FAITS SECONDAIRES
+-- ============================================================================
+
+-- -----------------------------
+-- FACT_ETAPES
+-- -----------------------------
+CREATE TABLE dbo.fact_etapes (
+    etape_id        INT IDENTITY(1,1) PRIMARY KEY,
+    createur        NVARCHAR(255) NULL,
+    emplacement     NVARCHAR(255) NULL,
+    statut          NVARCHAR(100) NULL,
+    tempsCreation   DECIMAL(10,2) NULL,
+    commande_id     NVARCHAR(50) NULL,
+    contrat_id      NVARCHAR(50) NULL,
+    
+
+);
+
+-- -----------------------------
+-- FACT_LUMIERES
+-- -----------------------------
+CREATE TABLE dbo.fact_lumieres (
+    lumiere_id      INT IDENTITY(1,1) PRIMARY KEY,
+    modele          NVARCHAR(255) NULL,
+    qte             DECIMAL(10,2) NULL,
+    contrat_id      NVARCHAR(50) NULL,
+    
+);
+
+-- -----------------------------
+-- FACT_KITS (Table la plus complexe)
+-- -----------------------------
+CREATE TABLE dbo.fact_kits (
+    kit_id                      INT IDENTITY(1,1) PRIMARY KEY,
+    
+    -- Identification
+    code                        NVARCHAR(50) NULL,
+    nom                         NVARCHAR(255) NULL,
+    typeKit                     NVARCHAR(100) NULL,
+    unit                        NVARCHAR(50) NULL,
+    ligne                       NVARCHAR(50) NULL,
+    
+    -- Liens transactionnels
+    commande_id                 NVARCHAR(50) NULL,
+    contrat_id                  NVARCHAR(50) NULL,
+    
+    -- Quantit�s
+    qte                         DECIMAL(10,2) NULL,
+    qteTr                       DECIMAL(10,2) NULL,
+    
+    -- M�triques financi�res
+    sousTotalKit                DECIMAL(15,2) NULL,
+    sousTotalKitEff             DECIMAL(15,2) NULL,
+    sousTotal                   DECIMAL(15,2) NULL,
+    sousTotalEff                DECIMAL(15,2) NULL,
+    sousTotalCab                DECIMAL(15,2) NULL,
+    sousTotalPanel              DECIMAL(15,2) NULL,
+    sousTotalMoulure            DECIMAL(15,2) NULL,
+    sousTotalAutre              DECIMAL(15,2) NULL,
+    
+    -- Comptoirs
+    totalComptoir               DECIMAL(15,2) NULL,
+    totalComptoirEff            DECIMAL(15,2) NULL,
+    nbComptoir                  DECIMAL(10,2) NULL,
+    longComptoir                DECIMAL(10,2) NULL,
+    surfaceComptoir             DECIMAL(10,2) NULL,
+    cumulComptoir               DECIMAL(10,2) NULL,
+    extraComptoir               DECIMAL(15,2) NULL,
+    comptoirMod                 NVARCHAR(100) NULL,
+    comptoirCouleur             NVARCHAR(100) NULL,
+    comptoirGpCouleur           NVARCHAR(100) NULL,
+    
+    -- Caract�ristiques produit
+    assemblage                  NVARCHAR(100) NULL,
+    gamme                       NVARCHAR(100) NULL,
+    serie                       NVARCHAR(100) NULL,
+    finishColor                 NVARCHAR(100) NULL,
+    specie                      NVARCHAR(100) NULL,
+    
+    -- Bordures et finitions
+    edgeColle                   NVARCHAR(100) NULL,
+    edgeBanding                 NVARCHAR(100) NULL,
+    bd_edgeBanding              NVARCHAR(100) NULL,
+    df_edgeBanding              NVARCHAR(100) NULL,
+    wd_edgeBanding              NVARCHAR(100) NULL,
+    edgePorte                   NVARCHAR(100) NULL,
+    edgeTablette                NVARCHAR(100) NULL,
+    
+    -- Poign�es
+    handle                      NVARCHAR(100) NULL,
+    handleOri                   NVARCHAR(100) NULL,
+    bd_handle                   NVARCHAR(100) NULL,
+    bd_handleOri                NVARCHAR(100) NULL,
+    df_handle                   NVARCHAR(100) NULL,
+    df_handleOri                NVARCHAR(100) NULL,
+    
+    -- Configuration armoires
+    cabDesign                   NVARCHAR(100) NULL,
+    cabConstruct                NVARCHAR(100) NULL,
+    cabHinge                    NVARCHAR(100) NULL,
+    cabWallProf                 DECIMAL(10,2) NULL,
+    t_cabWallProf               NVARCHAR(50) NULL,
+    cabHautComptoir             DECIMAL(10,2) NULL,
+    t_cabHautComptoir           NVARCHAR(50) NULL,
+    cabDegagementWall           DECIMAL(10,2) NULL,
+    t_cabDegagementWall         NVARCHAR(50) NULL,
+    cabToeKickHeight            DECIMAL(10,2) NULL,
+    t_cabToeKickHeight          NVARCHAR(50) NULL,
+    cabToeKickProf              DECIMAL(10,2) NULL,
+    t_cabToeKickProf            NVARCHAR(50) NULL,
+    cabToeKickType              NVARCHAR(100) NULL,
+    cabAlignBase                NVARCHAR(100) NULL,
+    t_cabAlignBase              NVARCHAR(50) NULL,
+    cabTallHeightAlign          NVARCHAR(100) NULL,
+    t_cabTallHeightAlign        NVARCHAR(50) NULL,
+    cabTypeComptoir             NVARCHAR(100) NULL,
+    
+    -- �l�ments techniques
+    tabletteType                NVARCHAR(100) NULL,
+    drawerConst                 NVARCHAR(100) NULL,
+    drawerSlide                 NVARCHAR(100) NULL,
+    matPatte                    NVARCHAR(100) NULL,
+    patteAchetee                NVARCHAR(100) NULL,
+    equerre                     NVARCHAR(100) NULL,
+    cacheNeon                   NVARCHAR(100) NULL,
+    
+    -- Poutres
+    beamModele                  NVARCHAR(100) NULL,
+    beamHeight                  DECIMAL(10,2) NULL,
+    t_beamHeight                NVARCHAR(50) NULL,
+    
+    -- Indicateurs
+    estBloqPrix                 BIT DEFAULT 0,
+    estPrixAdmin                BIT DEFAULT 0,
+    estExtra                    BIT DEFAULT 0,
+    enErreur                    BIT DEFAULT 0,
+    psd                         BIT DEFAULT 0,
+    
+    -- Signatures et utilisation
+    signature                   NVARCHAR(255) NULL,
+    kitUtilisation              NVARCHAR(255) NULL,
+    
+    -- Sp�cifications mat�riaux d�taill�es
+    bd_specie                   NVARCHAR(100) NULL,
+    df_specie                   NVARCHAR(100) NULL,
+    bd_serie                    NVARCHAR(100) NULL,
+    df_serie                    NVARCHAR(100) NULL,
+    bd_finishColor              NVARCHAR(100) NULL,
+    df_finishColor              NVARCHAR(100) NULL,
+    
+    -- Mod�les de portes
+    porteModeleB                NVARCHAR(100) NULL,
+    porteModeleH                NVARCHAR(100) NULL,
+    porteModeleFacadeB          NVARCHAR(100) NULL,
+    porteModeleFacadeH          NVARCHAR(100) NULL,
+    porteModeleBSensGrain       NVARCHAR(100) NULL,
+    porteModeleHSensGrain       NVARCHAR(100) NULL,
+    porteModeleFacadeBSensGrain NVARCHAR(100) NULL,
+    porteModeleFacadeHSensGrain NVARCHAR(100) NULL,
+    
+    -- �paisseurs portes
+    porteModeleB_epais          DECIMAL(10,2) NULL,
+    t_porteModeleB_epais        NVARCHAR(50) NULL,
+    porteModeleH_epais          DECIMAL(10,2) NULL,
+    t_porteModeleH_epais        NVARCHAR(50) NULL,
+    porteModeleFacadeB_epais    DECIMAL(10,2) NULL,
+    t_porteModeleFacadeB_epais  NVARCHAR(50) NULL,
+    porteModeleFacadeH_epais    DECIMAL(10,2) NULL,
+    t_porteModeleFacadeH_epais  NVARCHAR(50) NULL,
+    
+    -- Moulures
+    moulLumModele               NVARCHAR(100) NULL,
+    moulLumHeight               DECIMAL(10,2) NULL,
+    t_moulLumHeight             NVARCHAR(50) NULL,
+    moulPiedModele              NVARCHAR(100) NULL,
+    moulPiedHeight              DECIMAL(10,2) NULL,
+    t_moulPiedHeight            NVARCHAR(50) NULL,
+    
+    -- D�tails techniques
+    detailSection               NVARCHAR(255) NULL,
+    aBomCustom                  NVARCHAR(255) NULL,
+    couleurEstBois              NVARCHAR(100) NULL,
+    items                       NTEXT NULL,
+    typeColor                   NVARCHAR(100) NULL,
+    
+ 
+);
+
+  
+GO
+```
+
+# vue d'ensembles
+
+```{r}
+fact_etapes |> distinct()
+fact_kits  |> distinct()
+fact_lumieres  |> distinct()
+transactions |> distinct()
+
+dim_dates  |> distinct()
+dim_projets  |> distinct()
+dim_representants  |> distinct()
+dim_clients |> distinct()
+dim_adresses |> distinct()
+
+```
+
+# Conclusion
+
+Ce modèle dimensionnel constitue la fondation analytique du système décisionnel à implementer dans la phase 2 . Il transforme des données opérationnelles complexes en une structure optimisée pour l'analyse business, respectant les bonnes pratiques du data warehousing tout en préservant la richesse informationnelle des sources. L'architecture modulaire facilite la maintenance et permet une évolution contrôlée selon les besoins métier émergents.
+

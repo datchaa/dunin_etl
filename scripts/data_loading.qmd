@@ -201,6 +201,7 @@ dim_dates <- all_dates_df |>
   distinct() |>
   arrange(date)
 
+dim_dates |> glimpse()
 ```
 
 ### dim client
@@ -212,6 +213,8 @@ dim_clients <- transactions |> bind_rows(commandes_clean) |> transmute(
   type = typeClient,
   transaction_id = code
 ) |> select(where(~ !inherits(.x, "Date")))
+
+dim_clients |> glimpse()
 ```
 
 ### dim representant
@@ -223,6 +226,10 @@ dim_representants <- projets_clean |> transmute(
   codeRepresentant = codeRepresentant,
   projet_id = code
 ) |> select(where(~ !inherits(.x, "Date")))
+
+
+dim_representants |> glimpse()
+
 ```
 
 ### dim adresses
@@ -232,6 +239,7 @@ dim_adresses  <- adresses_clean |> mutate(
   adresse_id = row_number()
 ) |> select(where(~ !inherits(.x, "Date")))
 
+dim_adresses |> glimpse()
 ```
 
 ### dim projet
@@ -244,6 +252,8 @@ dim_projets <- projets_clean %>%
   rename(projet_id = code)
   # exclure les colonnes qui 
   
+dim_projets |> glimpse()
+
 ```
 
 ### tables des faits
@@ -262,12 +272,16 @@ transactions <- transactions |>
 
 transactions <- transactions |> select(where(~ !inherits(.x, "Date")))
 transactions <- transactions |> rename(projet_id = projet)
+
+transactions |> glimpse()
 ```
 
 ### kits
 
 ```{r}
 fact_kits <-kits_clean |>  select(where(~ !inherits(.x, "Date")))
+
+fact_kits |> glimpse()
 ```
 
 ### etapes
@@ -275,12 +289,14 @@ fact_kits <-kits_clean |>  select(where(~ !inherits(.x, "Date")))
 ```{r}
 
 fact_etapes <-etapes_clean |>  select(where(~ !inherits(.x, "Date")))
+fact_etapes|> glimpse()
 ```
 
 ### lumieres
 
 ```{r}
 fact_lumieres <-lumieres_clean |>  select(where(~ !inherits(.x, "Date")))
+fact_lumieres |> glimpse()
 ```
 
 # Modélisation Dimensionnelle et Data Warehouse
@@ -827,7 +843,7 @@ GO
 ```{r}
 fact_etapes |> distinct()
 fact_kits  |> distinct()
-fact_lumieres  |> distinct()
+fact_lumieres |> distinct()
 transactions |> distinct()
 
 dim_dates  |> distinct()

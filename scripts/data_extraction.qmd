@@ -268,7 +268,7 @@ contrats_xmls_extracted_tables$EveXML |> print()
 ## Projets
 
 ```{r}
-projets_xmls_extracted_tables$ProjetXML |> print()
+projets_xmls_extracted_tables |> glimpse()
 ```
 
 # Modèle de données résultant

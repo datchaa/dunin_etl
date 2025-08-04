@@ -468,83 +468,349 @@ Attachement du package : 'dplyr'</code></pre>
 <span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">nom_jour     =</span> <span class="fu">format</span>(value, <span class="st">"%A"</span>)</span>
 <span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span></span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(date)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(date)</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>dim_dates <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 660
+Columns: 8
+$ date_id      &lt;int&gt; 20220721, 20221012, 20221013, 20221014, 20221018, 2022101…
+$ date         &lt;date&gt; 2022-07-21, 2022-10-12, 2022-10-13, 2022-10-14, 2022-10-…
+$ annee        &lt;int&gt; 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 202…
+$ mois         &lt;int&gt; 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11…
+$ nom_mois     &lt;chr&gt; "juillet", "octobre", "octobre", "octobre", "octobre", "o…
+$ jour         &lt;int&gt; 21, 12, 13, 14, 18, 19, 25, 26, 27, 28, 31, 1, 2, 9, 22, …
+$ jour_semaine &lt;int&gt; 4, 3, 4, 5, 2, 3, 2, 3, 4, 5, 1, 2, 3, 3, 2, 1, 4, 2, 3, …
+$ nom_jour     &lt;chr&gt; "jeudi", "mercredi", "jeudi", "vendredi", "mardi", "mercr…</code></pre>
+</div>
 </div>
 </section>
 <section id="dim-client" class="level3" data-number="5.1.2">
 <h3 data-number="5.1.2" class="anchored" data-anchor-id="dim-client"><span class="header-section-number">5.1.2</span> dim client</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dim_clients <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">bind_rows</span>(commandes_clean) <span class="sc">|&gt;</span> <span class="fu">transmute</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">client_id =</span> <span class="fu">row_number</span>(),</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nom =</span> nomClient,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> typeClient,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">transaction_id =</span> code</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dim_clients <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">bind_rows</span>(commandes_clean) <span class="sc">|&gt;</span> <span class="fu">transmute</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">client_id =</span> <span class="fu">row_number</span>(),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nom =</span> nomClient,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> typeClient,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">transaction_id =</span> code</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>dim_clients <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 4,532
+Columns: 4
+$ client_id      &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, …
+$ nom            &lt;chr&gt; "Avivia", "", "Avivia", "Avivia", "Avivia", "Avivia", "…
+$ type           &lt;chr&gt; "particulier", "particulier", "particulier", "particuli…
+$ transaction_id &lt;chr&gt; "C-000089", "C-000093", "C-000115", "C-000119", "C-0001…</code></pre>
+</div>
 </div>
 </section>
 <section id="dim-representant" class="level3" data-number="5.1.3">
 <h3 data-number="5.1.3" class="anchored" data-anchor-id="dim-representant"><span class="header-section-number">5.1.3</span> dim representant</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dim_representants <span class="ot">&lt;-</span> projets_clean <span class="sc">|&gt;</span> <span class="fu">transmute</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">representant_id =</span> <span class="fu">row_number</span>(),</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nom =</span> nomRepresentant,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">codeRepresentant =</span> codeRepresentant,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">projet_id =</span> code</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dim_representants <span class="ot">&lt;-</span> projets_clean <span class="sc">|&gt;</span> <span class="fu">transmute</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">representant_id =</span> <span class="fu">row_number</span>(),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nom =</span> nomRepresentant,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">codeRepresentant =</span> codeRepresentant,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">projet_id =</span> code</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>dim_representants <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,035
+Columns: 4
+$ representant_id  &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16…
+$ nom              &lt;chr&gt; "Mr Robert", "", "", "", "", "Mr Robert", "", "", "Mr…
+$ codeRepresentant &lt;chr&gt; "003", "", "", "", "", "003", "", "", "003", "003", "…
+$ projet_id        &lt;chr&gt; "P-000001", "P-000002", "P-000004", "P-000006", "P-00…</code></pre>
+</div>
 </div>
 </section>
 <section id="dim-adresses" class="level3" data-number="5.1.4">
 <h3 data-number="5.1.4" class="anchored" data-anchor-id="dim-adresses"><span class="header-section-number">5.1.4</span> dim adresses</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dim_adresses  <span class="ot">&lt;-</span> adresses_clean <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">adresse_id =</span> <span class="fu">row_number</span>()</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dim_adresses  <span class="ot">&lt;-</span> adresses_clean <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">adresse_id =</span> <span class="fu">row_number</span>()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>dim_adresses <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 21,263
+Columns: 14
+$ codePost   &lt;chr&gt; "G0X2B0", "G0A1L0", "G0X2B0", "G0A1L0", "G0X2B0", "G0A1L0",…
+$ etatProv   &lt;chr&gt; "Quebec", "Quebec", "Quebec", "Quebec", "Quebec", "Quebec",…
+$ ligne1     &lt;chr&gt; "20 Route Goulet", "110, route 138", "20 Route Goulet", "11…
+$ ligne2     &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",…
+$ pays       &lt;chr&gt; "Canada", "Canada", "Canada", "Canada", "Canada", "Canada",…
+$ region     &lt;chr&gt; "R1", "R1", "R1", "R1", "R1", "R1", "R1", "R1", "R1", "R1",…
+$ ville      &lt;chr&gt; "Saint-Séverin-de-Proulxville", "Cap-Santé", "Saint-Séverin…
+$ usage      &lt;chr&gt; "Fact", "Exped", "Fact", "Exped", "Fact", "Exped", "Fact", …
+$ code       &lt;chr&gt; "Fact", "ShowRoom", "Fact", "ShowRoom", "Fact", "ShowRoom",…
+$ sorte      &lt;chr&gt; "", "WAREHOUSE", "", "WAREHOUSE", "", "WAREHOUSE", "", "WAR…
+$ projet_id  &lt;chr&gt; "P-000001", "P-000001", "P-000001", "P-000001", "P-000001",…
+$ nom        &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "Janin Bern…
+$ contact    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",…
+$ adresse_id &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, …</code></pre>
+</div>
 </div>
 </section>
 <section id="dim-projet" class="level3" data-number="5.1.5">
 <h3 data-number="5.1.5" class="anchored" data-anchor-id="dim-projet"><span class="header-section-number">5.1.5</span> dim projet</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dim_projets <span class="ot">&lt;-</span> projets_clean <span class="sc">%&gt;%</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>))) <span class="sc">%&gt;%</span>   <span class="co"># exclure les colonnes Date</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">contains</span>(<span class="fu">c</span>(<span class="st">"client"</span>, <span class="st">"Representant"</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">projet_id =</span> code)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclure les colonnes qui </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dim_projets <span class="ot">&lt;-</span> projets_clean <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>))) <span class="sc">%&gt;%</span>   <span class="co"># exclure les colonnes Date</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span><span class="fu">contains</span>(<span class="fu">c</span>(<span class="st">"client"</span>, <span class="st">"Representant"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">projet_id =</span> code)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># exclure les colonnes qui </span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>dim_projets <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,035
+Columns: 13
+$ projet_id        &lt;chr&gt; "P-000001", "P-000002", "P-000004", "P-000006", "P-00…
+$ marche           &lt;chr&gt; "", "", "", "", "", "", "", "Quebec", "", "", "", "",…
+$ division         &lt;chr&gt; "Division_1", "Division_1", "Division_1", "Division_1…
+$ courrielContact  &lt;chr&gt; "info@avivia.ca", "", "", "", "", "info@avivia.ca", "…
+$ nomContact       &lt;chr&gt; "Mr Contact", "", "", "", "", "Mr Contact", "", "", "…
+$ telephoneContact &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "", "…
+$ coordsCommTxt    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "Tel.…
+$ coordsExpedTxt   &lt;chr&gt; "110, route 138, Cap-Santé, Quebec, G0A1L0, Canada", …
+$ coordsFactTxt    &lt;chr&gt; "20 Route Goulet, Saint-Séverin-de-Proulxville, Quebe…
+$ estReprise       &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALS…
+$ enFusion         &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALS…
+$ createurNom      &lt;chr&gt; "", "", "", "", "", "", "", "Claudia Robitaille", "Ch…
+$ createurCourriel &lt;chr&gt; "", "", "", "", "", "", "", "crobitaille@avivia.ca", …</code></pre>
+</div>
 </div>
 </section>
 <section id="tables-des-faits" class="level3" data-number="5.1.6">
 <h3 data-number="5.1.6" class="anchored" data-anchor-id="tables-des-faits"><span class="header-section-number">5.1.6</span> tables des faits</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(commandes_clean,contrats_clean)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Associer chaque date de transactions à un date_id</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dateCreation"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_creation_id =</span> date_id) <span class="sc">|&gt;</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dateValidite"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_validite_id =</span> date_id) <span class="sc">|&gt;</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"datePrevExped"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_prev_exped_id =</span> date_id)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">projet_id =</span> projet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(commandes_clean,contrats_clean)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Associer chaque date de transactions à un date_id</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dateCreation"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_creation_id =</span> date_id) <span class="sc">|&gt;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dateValidite"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_validite_id =</span> date_id) <span class="sc">|&gt;</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(dim_dates <span class="sc">|&gt;</span> <span class="fu">select</span>(date_id, date), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"datePrevExped"</span> <span class="ot">=</span> <span class="st">"date"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">date_prev_exped_id =</span> date_id)</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>transactions <span class="ot">&lt;-</span> transactions <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">projet_id =</span> projet)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>transactions <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 3,818
+Columns: 47
+$ code                   &lt;chr&gt; "C-000089", "C-000093", "C-000115", "C-000119",…
+$ nomClient              &lt;chr&gt; "Avivia", "", "Avivia", "Avivia", "Avivia", "Av…
+$ codeClient2            &lt;chr&gt; "Avivia", "", "Avivia", "Avivia", "Avivia", "Av…
+$ typeClient             &lt;chr&gt; "particulier", "particulier", "particulier", "p…
+$ delaiPrevExped         &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,…
+$ nbJourValide           &lt;dbl&gt; 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 0, …
+$ statutCred             &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ validCred              &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,…
+$ total                  &lt;dbl&gt; 764.35, 0.00, 0.00, 0.00, 0.00, 8307.06, 348.28…
+$ totalHT                &lt;dbl&gt; 664.80, 0.00, 0.00, 0.00, 0.00, 7225.10, 348.28…
+$ sousTotal              &lt;dbl&gt; 346.43, 330.66, 0.00, 0.00, 0.00, 1935.55, 348.…
+$ sousTotal2             &lt;dbl&gt; 0.00, 0.00, 0.00, 0.00, 0.00, 6935.55, 348.28, …
+$ totalLivraison         &lt;dbl&gt; 318.37, 0.00, 0.00, 0.00, 0.00, 289.55, 0.00, 2…
+$ totalInstall           &lt;dbl&gt; 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1499.…
+$ totalCEM               &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ qteItems               &lt;dbl&gt; 2, 4, 0, 0, 0, 10, 2, 26, 0, 8, 0, 0, 6, 2, 0, …
+$ qteItemsCab            &lt;dbl&gt; 1, 1, 0, 0, 0, 4, 1, 12, 0, 3, 0, 0, 2, 1, 0, 1…
+$ promotions             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ createurNom            &lt;chr&gt; "Techdunin", "Ghislain", "client", "client", "c…
+$ createurCourriel       &lt;chr&gt; "malavoie@dunin.com", "glebel@avivia.ca", "gleb…
+$ division               &lt;chr&gt; "Division_1", "Division_1", "Division_1", "Divi…
+$ projet_id              &lt;chr&gt; "P-000175", "P-000181", "P-000219", "P-000223",…
+$ estImport              &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ estReprise             &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ estCQ                  &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ avecLivraison          &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,…
+$ installation           &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+$ totalTx1               &lt;dbl&gt; 33.24, 0.00, 0.00, 0.00, 0.00, 361.26, 0.00, 60…
+$ totalTx2               &lt;dbl&gt; 66.31, 0.00, 0.00, 0.00, 0.00, 720.70, 0.00, 12…
+$ ecartPrix              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ solde                  &lt;dbl&gt; 764.35, 0.00, 0.00, 0.00, 0.00, 8307.06, 348.28…
+$ psd                    &lt;lgl&gt; FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, …
+$ totalComptoirBois      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ totalComptoirGranite   &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ totalComptoirQuartz    &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ totalComptoirStratifie &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ totalEsc               &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ montantEcartPrix       &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ fraisPSD               &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ fraisPDM               &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ fraisSAV               &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ TotalEscompte          &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ codePost               &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ codePostFinal          &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ date_creation_id       &lt;int&gt; 20230830, 20230831, 20230914, 20230914, 2023103…
+$ date_validite_id       &lt;int&gt; 20231128, NA, NA, NA, NA, 20240304, NA, NA, NA,…
+$ date_prev_exped_id     &lt;int&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…</code></pre>
+</div>
 </div>
 </section>
 <section id="kits" class="level3" data-number="5.1.7">
 <h3 data-number="5.1.7" class="anchored" data-anchor-id="kits"><span class="header-section-number">5.1.7</span> kits</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fact_kits <span class="ot">&lt;-</span>kits_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fact_kits <span class="ot">&lt;-</span>kits_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>fact_kits <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 24,502
+Columns: 114
+$ code                        &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ nom                         &lt;chr&gt; "Contour", "Contour", "Contour", "Contour"…
+$ qte                         &lt;dbl&gt; 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ qteTr                       &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ typeKit                     &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ unit                        &lt;chr&gt; "***", "***", "***", "***", "***", "***", …
+$ sousTotalKit                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotalKitEff             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotal                   &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotalEff                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ totalComptoir               &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ totalComptoirEff            &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ nbComptoir                  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ longComptoir                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ surfaceComptoir             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ cumulComptoir               &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ extraComptoir               &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ comptoirMod                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ comptoirCouleur             &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ comptoirGpCouleur           &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ sousTotalCab                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotalPanel              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotalMoulure            &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ sousTotalAutre              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ assemblage                  &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ gamme                       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ serie                       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ finishColor                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ edgeColle                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ edgeBanding                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_edgeBanding              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_edgeBanding              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ wd_edgeBanding              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ edgePorte                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ edgeTablette                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ handle                      &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ handleOri                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_handle                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_handleOri                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_handle                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_handleOri                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabDesign                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabConstruct                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabHinge                    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabWallProf                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ t_cabWallProf               &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabHautComptoir             &lt;dbl&gt; 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, …
+$ t_cabHautComptoir           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ cabDegagementWall           &lt;dbl&gt; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.…
+$ t_cabDegagementWall         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ cabToeKickHeight            &lt;dbl&gt; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.…
+$ t_cabToeKickHeight          &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ cabToeKickProf              &lt;dbl&gt; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.…
+$ t_cabToeKickProf            &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ cabToeKickType              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabAlignBase                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ t_cabAlignBase              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabTallHeightAlign          &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ t_cabTallHeightAlign        &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cabTypeComptoir             &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ tabletteType                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ drawerConst                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ drawerSlide                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ matPatte                    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ patteAchetee                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ equerre                     &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ cacheNeon                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ beamModele                  &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ beamHeight                  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ t_beamHeight                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ ligne                       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ contrat_id                  &lt;chr&gt; "P-000390-S1", "P-000390-S2", "P-000554-S1…
+$ commande_id                 &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ estBloqPrix                 &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …
+$ estPrixAdmin                &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …
+$ estExtra                    &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …
+$ enErreur                    &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …
+$ signature                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ kitUtilisation              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ specie                      &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_specie                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_specie                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_serie                    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_serie                    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ bd_finishColor              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ df_finishColor              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleB                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleH                &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleFacadeB          &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleFacadeH          &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleBSensGrain       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleHSensGrain       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleFacadeBSensGrain &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleFacadeHSensGrain &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ porteModeleB_epais          &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, …
+$ t_porteModeleB_epais        &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ porteModeleH_epais          &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, …
+$ t_porteModeleH_epais        &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ porteModeleFacadeB_epais    &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, …
+$ t_porteModeleFacadeB_epais  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ porteModeleFacadeH_epais    &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, …
+$ t_porteModeleFacadeH_epais  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ moulLumModele               &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ moulLumHeight               &lt;dbl&gt; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.…
+$ t_moulLumHeight             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ moulPiedModele              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ moulPiedHeight              &lt;dbl&gt; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.…
+$ t_moulPiedHeight            &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ detailSection               &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ aBomCustom                  &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ couleurEstBois              &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ items                       &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ typeColor                   &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", ""…
+$ psd                         &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, …</code></pre>
+</div>
 </div>
 </section>
 <section id="etapes" class="level3" data-number="5.1.8">
 <h3 data-number="5.1.8" class="anchored" data-anchor-id="etapes"><span class="header-section-number">5.1.8</span> etapes</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fact_etapes <span class="ot">&lt;-</span>etapes_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fact_etapes <span class="ot">&lt;-</span>etapes_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>fact_etapes<span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 11,664
+Columns: 6
+$ createur      &lt;chr&gt; "dunintech", "dunintech", "dunintech", "glebel", "glebel…
+$ emplacement   &lt;chr&gt; "Manufacturier", "Manufacturier", "Manufacturier", "Manu…
+$ statut        &lt;chr&gt; "Saisie", "Saisie", "Saisie", "Saisie", "Saisie", "Saisi…
+$ tempsCreation &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ commande_id   &lt;chr&gt; "C-000001", "C-000001", "C-000001", "C-000002", "C-00000…
+$ contrat_id    &lt;chr&gt; "", "", "", "", "", "", "", "", "", "", "", "", "", "", …</code></pre>
+</div>
 </div>
 </section>
 <section id="lumieres" class="level3" data-number="5.1.9">
 <h3 data-number="5.1.9" class="anchored" data-anchor-id="lumieres"><span class="header-section-number">5.1.9</span> lumieres</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fact_lumieres <span class="ot">&lt;-</span>lumieres_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>fact_lumieres <span class="ot">&lt;-</span>lumieres_clean <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">inherits</span>(.x, <span class="st">"Date"</span>)))</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>fact_lumieres <span class="sc">|&gt;</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,826
+Columns: 3
+$ modele     &lt;chr&gt; "PUCK120mm_NI", "PUCK79mm_NI", "PUCK120mm_NI", "PUCK79mm_NI…
+$ qte        &lt;dbl&gt; 2, 5, 2, 5, 2, 5, 4, 4, 4, 4, 4, 4, 3, 3, 3, 7, 7, 7, 7, 7,…
+$ contrat_id &lt;chr&gt; "P-000390-S1", "P-000390-S1", "P-000390-S1", "P-000390-S1",…</code></pre>
+</div>
 </div>
 </section>
 </section>
@@ -678,428 +944,428 @@ Attachement du package : 'dplyr'</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- SCRIPT DE CR�ATION DU DATA WAREHOUSE DUNIN_DWH</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Cr�ation de la base de donn�es</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> name <span class="kw">FROM</span> sys.databases <span class="kw">WHERE</span> name <span class="op">=</span> <span class="st">'DUNIN_DWH'</span>)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CREATE</span> <span class="kw">DATABASE</span> DUNIN_DWH;</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    PRINT <span class="st">'Base de donn�es DUNIN_DWH cr��e avec succ�s.'</span>;</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="cf">ELSE</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    PRINT <span class="st">'Base de donn�es DUNIN_DWH existe d�j�.'</span>;</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>GO</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> DUNIN_DWH;</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>GO</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- SUPPRESSION DES TABLES EXISTANTES (pour r�initialisation compl�te)</span></span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- Suppression des tables de faits (d�pendantes)</span></span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_etapes'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_etapes;</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_lumieres'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_lumieres;</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_kits'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_kits;</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.transactions'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.transactions;</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a><span class="co">-- Suppression des tables de dimensions</span></span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_clients'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_clients;</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_representants'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_representants;</span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_adresses'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_adresses;</span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_projets'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_projets;</span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_dates'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_dates;</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Tables existantes supprim�es.'</span>;</span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>GO</span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DES TABLES DE DIMENSIONS</span></span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION DATES</span></span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_dates (</span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    date_id         <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>    <span class="dt">date</span>            <span class="dt">DATE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    annee           <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>    mois            <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    nom_mois        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    jour            <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    jour_semaine    <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>    nom_jour        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION CLIENTS</span></span>
-<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_clients (</span>
-<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>    client_id       <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>    nom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span>            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>    transaction_id  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Table dim_clients cr��e.'</span>;</span>
-<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION PROJETS</span></span>
-<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_projets (</span>
-<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a>    projet_id           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a>    marche              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a>    division            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a>    courrielContact     <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a>    nomContact          <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a>    telephoneContact    <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a>    coordsCommTxt       <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a>    coordsExpedTxt      <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a>    coordsFactTxt       <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a>    estReprise          BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a>    enFusion            BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a>    createurNom         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>    createurCourriel    <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION REPRESENTANTS</span></span>
-<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_representants (</span>
-<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a>    representant_id     <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a>    nom                 <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a>    codeRepresentant    <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-100"><a href="#cb20-100" aria-hidden="true" tabindex="-1"></a>    projet_id           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl� �trang�re</span></span>
-<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_dim_representants_projet </span>
-<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id)</span>
-<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Table dim_representants cr��e.'</span>;</span>
-<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION ADRESSES</span></span>
-<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_adresses (</span>
-<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a>    adresse_id      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a>    codePost        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a>    etatProv        <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a>    ligne1          <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a>    ligne2          <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a>    pays            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a>    region          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a>    ville           <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>    <span class="kw">usage</span>           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a>    code            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a>    sorte           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>    projet_id       <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a>    nom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a>    contact         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl� �trang�re</span></span>
-<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_dim_adresses_projet </span>
-<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id)</span>
-<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DE LA TABLE DE FAIT PRINCIPALE</span></span>
-<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a><span class="co">-- TRANSACTIONS (Fait principal)</span></span>
-<span id="cb20-138"><a href="#cb20-138" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-139"><a href="#cb20-139" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.transactions (</span>
-<span id="cb20-140"><a href="#cb20-140" aria-hidden="true" tabindex="-1"></a>    transaction_id          <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-141"><a href="#cb20-141" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-142"><a href="#cb20-142" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl�s �trang�res vers dimensions</span></span>
-<span id="cb20-143"><a href="#cb20-143" aria-hidden="true" tabindex="-1"></a>    projet_id               <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-144"><a href="#cb20-144" aria-hidden="true" tabindex="-1"></a>    date_creation_id        <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-145"><a href="#cb20-145" aria-hidden="true" tabindex="-1"></a>    date_validite_id        <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-146"><a href="#cb20-146" aria-hidden="true" tabindex="-1"></a>    date_prev_exped_id      <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
-<span id="cb20-147"><a href="#cb20-147" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-148"><a href="#cb20-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Informations client (d�normalis� pour performance)</span></span>
-<span id="cb20-149"><a href="#cb20-149" aria-hidden="true" tabindex="-1"></a>    nomClient               <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-150"><a href="#cb20-150" aria-hidden="true" tabindex="-1"></a>    codeClient2             <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-151"><a href="#cb20-151" aria-hidden="true" tabindex="-1"></a>    typeClient              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-152"><a href="#cb20-152" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-153"><a href="#cb20-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques temporelles</span></span>
-<span id="cb20-154"><a href="#cb20-154" aria-hidden="true" tabindex="-1"></a>    delaiPrevExped          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-155"><a href="#cb20-155" aria-hidden="true" tabindex="-1"></a>    nbJourValide            <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-156"><a href="#cb20-156" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-157"><a href="#cb20-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Statuts et indicateurs</span></span>
-<span id="cb20-158"><a href="#cb20-158" aria-hidden="true" tabindex="-1"></a>    statutCred              BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-159"><a href="#cb20-159" aria-hidden="true" tabindex="-1"></a>    validCred               BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-160"><a href="#cb20-160" aria-hidden="true" tabindex="-1"></a>    estImport               BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-161"><a href="#cb20-161" aria-hidden="true" tabindex="-1"></a>    estReprise              BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-162"><a href="#cb20-162" aria-hidden="true" tabindex="-1"></a>    estCQ                   BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-163"><a href="#cb20-163" aria-hidden="true" tabindex="-1"></a>    avecLivraison           BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-164"><a href="#cb20-164" aria-hidden="true" tabindex="-1"></a>    installation            BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-165"><a href="#cb20-165" aria-hidden="true" tabindex="-1"></a>    psd                     BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-166"><a href="#cb20-166" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-167"><a href="#cb20-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques financi�res principales</span></span>
-<span id="cb20-168"><a href="#cb20-168" aria-hidden="true" tabindex="-1"></a>    total                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-169"><a href="#cb20-169" aria-hidden="true" tabindex="-1"></a>    totalHT                 <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-170"><a href="#cb20-170" aria-hidden="true" tabindex="-1"></a>    sousTotal               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-171"><a href="#cb20-171" aria-hidden="true" tabindex="-1"></a>    sousTotal2              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-172"><a href="#cb20-172" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-173"><a href="#cb20-173" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques de services</span></span>
-<span id="cb20-174"><a href="#cb20-174" aria-hidden="true" tabindex="-1"></a>    totalLivraison          <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-175"><a href="#cb20-175" aria-hidden="true" tabindex="-1"></a>    totalInstall            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-176"><a href="#cb20-176" aria-hidden="true" tabindex="-1"></a>    totalCEM                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-177"><a href="#cb20-177" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-178"><a href="#cb20-178" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques de quantit�</span></span>
-<span id="cb20-179"><a href="#cb20-179" aria-hidden="true" tabindex="-1"></a>    qteItems                <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-180"><a href="#cb20-180" aria-hidden="true" tabindex="-1"></a>    qteItemsCab             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-181"><a href="#cb20-181" aria-hidden="true" tabindex="-1"></a>    promotions              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-182"><a href="#cb20-182" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-183"><a href="#cb20-183" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Informations cr�ation</span></span>
-<span id="cb20-184"><a href="#cb20-184" aria-hidden="true" tabindex="-1"></a>    createurNom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-185"><a href="#cb20-185" aria-hidden="true" tabindex="-1"></a>    createurCourriel        <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-186"><a href="#cb20-186" aria-hidden="true" tabindex="-1"></a>    division                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-187"><a href="#cb20-187" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-188"><a href="#cb20-188" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Taxes et ajustements</span></span>
-<span id="cb20-189"><a href="#cb20-189" aria-hidden="true" tabindex="-1"></a>    totalTx1                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-190"><a href="#cb20-190" aria-hidden="true" tabindex="-1"></a>    totalTx2                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-191"><a href="#cb20-191" aria-hidden="true" tabindex="-1"></a>    ecartPrix               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-192"><a href="#cb20-192" aria-hidden="true" tabindex="-1"></a>    solde                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-193"><a href="#cb20-193" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-194"><a href="#cb20-194" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Sp�cificit�s contrats (comptoirs)</span></span>
-<span id="cb20-195"><a href="#cb20-195" aria-hidden="true" tabindex="-1"></a>    totalComptoirBois       <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-196"><a href="#cb20-196" aria-hidden="true" tabindex="-1"></a>    totalComptoirGranite    <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-197"><a href="#cb20-197" aria-hidden="true" tabindex="-1"></a>    totalComptoirQuartz     <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-198"><a href="#cb20-198" aria-hidden="true" tabindex="-1"></a>    totalComptoirStratifie  <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-199"><a href="#cb20-199" aria-hidden="true" tabindex="-1"></a>    totalEsc                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-200"><a href="#cb20-200" aria-hidden="true" tabindex="-1"></a>    montantEcartPrix        <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-201"><a href="#cb20-201" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-202"><a href="#cb20-202" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Frais sp�cialis�s</span></span>
-<span id="cb20-203"><a href="#cb20-203" aria-hidden="true" tabindex="-1"></a>    fraisPSD                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-204"><a href="#cb20-204" aria-hidden="true" tabindex="-1"></a>    fraisPDM                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-205"><a href="#cb20-205" aria-hidden="true" tabindex="-1"></a>    fraisSAV                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-206"><a href="#cb20-206" aria-hidden="true" tabindex="-1"></a>    TotalEscompte           <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-207"><a href="#cb20-207" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-208"><a href="#cb20-208" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Codes postaux</span></span>
-<span id="cb20-209"><a href="#cb20-209" aria-hidden="true" tabindex="-1"></a>    codePost                <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-210"><a href="#cb20-210" aria-hidden="true" tabindex="-1"></a>    codePostFinal           <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-211"><a href="#cb20-211" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-212"><a href="#cb20-212" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb20-213"><a href="#cb20-213" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb20-214"><a href="#cb20-214" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl�s �trang�res</span></span>
-<span id="cb20-215"><a href="#cb20-215" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_projet </span>
-<span id="cb20-216"><a href="#cb20-216" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id),</span>
-<span id="cb20-217"><a href="#cb20-217" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_creation </span>
-<span id="cb20-218"><a href="#cb20-218" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_creation_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id),</span>
-<span id="cb20-219"><a href="#cb20-219" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_validite </span>
-<span id="cb20-220"><a href="#cb20-220" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_validite_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id),</span>
-<span id="cb20-221"><a href="#cb20-221" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_exped </span>
-<span id="cb20-222"><a href="#cb20-222" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_prev_exped_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id)</span>
-<span id="cb20-223"><a href="#cb20-223" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-224"><a href="#cb20-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-225"><a href="#cb20-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-226"><a href="#cb20-226" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-227"><a href="#cb20-227" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DES TABLES DE FAITS SECONDAIRES</span></span>
-<span id="cb20-228"><a href="#cb20-228" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
-<span id="cb20-229"><a href="#cb20-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-230"><a href="#cb20-230" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-231"><a href="#cb20-231" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_ETAPES</span></span>
-<span id="cb20-232"><a href="#cb20-232" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-233"><a href="#cb20-233" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_etapes (</span>
-<span id="cb20-234"><a href="#cb20-234" aria-hidden="true" tabindex="-1"></a>    etape_id        <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-235"><a href="#cb20-235" aria-hidden="true" tabindex="-1"></a>    createur        <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-236"><a href="#cb20-236" aria-hidden="true" tabindex="-1"></a>    emplacement     <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-237"><a href="#cb20-237" aria-hidden="true" tabindex="-1"></a>    statut          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-238"><a href="#cb20-238" aria-hidden="true" tabindex="-1"></a>    tempsCreation   <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-239"><a href="#cb20-239" aria-hidden="true" tabindex="-1"></a>    commande_id     <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-240"><a href="#cb20-240" aria-hidden="true" tabindex="-1"></a>    contrat_id      <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-241"><a href="#cb20-241" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-242"><a href="#cb20-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-243"><a href="#cb20-243" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-244"><a href="#cb20-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-245"><a href="#cb20-245" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-246"><a href="#cb20-246" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_LUMIERES</span></span>
-<span id="cb20-247"><a href="#cb20-247" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-248"><a href="#cb20-248" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_lumieres (</span>
-<span id="cb20-249"><a href="#cb20-249" aria-hidden="true" tabindex="-1"></a>    lumiere_id      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-250"><a href="#cb20-250" aria-hidden="true" tabindex="-1"></a>    modele          <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-251"><a href="#cb20-251" aria-hidden="true" tabindex="-1"></a>    qte             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-252"><a href="#cb20-252" aria-hidden="true" tabindex="-1"></a>    contrat_id      <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-253"><a href="#cb20-253" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-254"><a href="#cb20-254" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-255"><a href="#cb20-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-256"><a href="#cb20-256" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-257"><a href="#cb20-257" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_KITS (Table la plus complexe)</span></span>
-<span id="cb20-258"><a href="#cb20-258" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
-<span id="cb20-259"><a href="#cb20-259" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_kits (</span>
-<span id="cb20-260"><a href="#cb20-260" aria-hidden="true" tabindex="-1"></a>    kit_id                      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
-<span id="cb20-261"><a href="#cb20-261" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-262"><a href="#cb20-262" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Identification</span></span>
-<span id="cb20-263"><a href="#cb20-263" aria-hidden="true" tabindex="-1"></a>    code                        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-264"><a href="#cb20-264" aria-hidden="true" tabindex="-1"></a>    nom                         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-265"><a href="#cb20-265" aria-hidden="true" tabindex="-1"></a>    typeKit                     <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-266"><a href="#cb20-266" aria-hidden="true" tabindex="-1"></a>    unit                        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-267"><a href="#cb20-267" aria-hidden="true" tabindex="-1"></a>    ligne                       <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-268"><a href="#cb20-268" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-269"><a href="#cb20-269" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Liens transactionnels</span></span>
-<span id="cb20-270"><a href="#cb20-270" aria-hidden="true" tabindex="-1"></a>    commande_id                 <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-271"><a href="#cb20-271" aria-hidden="true" tabindex="-1"></a>    contrat_id                  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-272"><a href="#cb20-272" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-273"><a href="#cb20-273" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Quantit�s</span></span>
-<span id="cb20-274"><a href="#cb20-274" aria-hidden="true" tabindex="-1"></a>    qte                         <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-275"><a href="#cb20-275" aria-hidden="true" tabindex="-1"></a>    qteTr                       <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-276"><a href="#cb20-276" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-277"><a href="#cb20-277" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques financi�res</span></span>
-<span id="cb20-278"><a href="#cb20-278" aria-hidden="true" tabindex="-1"></a>    sousTotalKit                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-279"><a href="#cb20-279" aria-hidden="true" tabindex="-1"></a>    sousTotalKitEff             <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-280"><a href="#cb20-280" aria-hidden="true" tabindex="-1"></a>    sousTotal                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-281"><a href="#cb20-281" aria-hidden="true" tabindex="-1"></a>    sousTotalEff                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-282"><a href="#cb20-282" aria-hidden="true" tabindex="-1"></a>    sousTotalCab                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-283"><a href="#cb20-283" aria-hidden="true" tabindex="-1"></a>    sousTotalPanel              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-284"><a href="#cb20-284" aria-hidden="true" tabindex="-1"></a>    sousTotalMoulure            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-285"><a href="#cb20-285" aria-hidden="true" tabindex="-1"></a>    sousTotalAutre              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-286"><a href="#cb20-286" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-287"><a href="#cb20-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Comptoirs</span></span>
-<span id="cb20-288"><a href="#cb20-288" aria-hidden="true" tabindex="-1"></a>    totalComptoir               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-289"><a href="#cb20-289" aria-hidden="true" tabindex="-1"></a>    totalComptoirEff            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-290"><a href="#cb20-290" aria-hidden="true" tabindex="-1"></a>    nbComptoir                  <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-291"><a href="#cb20-291" aria-hidden="true" tabindex="-1"></a>    longComptoir                <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-292"><a href="#cb20-292" aria-hidden="true" tabindex="-1"></a>    surfaceComptoir             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-293"><a href="#cb20-293" aria-hidden="true" tabindex="-1"></a>    cumulComptoir               <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-294"><a href="#cb20-294" aria-hidden="true" tabindex="-1"></a>    extraComptoir               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-295"><a href="#cb20-295" aria-hidden="true" tabindex="-1"></a>    comptoirMod                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-296"><a href="#cb20-296" aria-hidden="true" tabindex="-1"></a>    comptoirCouleur             <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-297"><a href="#cb20-297" aria-hidden="true" tabindex="-1"></a>    comptoirGpCouleur           <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-298"><a href="#cb20-298" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-299"><a href="#cb20-299" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Caract�ristiques produit</span></span>
-<span id="cb20-300"><a href="#cb20-300" aria-hidden="true" tabindex="-1"></a>    assemblage                  <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-301"><a href="#cb20-301" aria-hidden="true" tabindex="-1"></a>    gamme                       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-302"><a href="#cb20-302" aria-hidden="true" tabindex="-1"></a>    serie                       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-303"><a href="#cb20-303" aria-hidden="true" tabindex="-1"></a>    finishColor                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-304"><a href="#cb20-304" aria-hidden="true" tabindex="-1"></a>    specie                      <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-305"><a href="#cb20-305" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-306"><a href="#cb20-306" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Bordures et finitions</span></span>
-<span id="cb20-307"><a href="#cb20-307" aria-hidden="true" tabindex="-1"></a>    edgeColle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-308"><a href="#cb20-308" aria-hidden="true" tabindex="-1"></a>    edgeBanding                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-309"><a href="#cb20-309" aria-hidden="true" tabindex="-1"></a>    bd_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-310"><a href="#cb20-310" aria-hidden="true" tabindex="-1"></a>    df_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-311"><a href="#cb20-311" aria-hidden="true" tabindex="-1"></a>    wd_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-312"><a href="#cb20-312" aria-hidden="true" tabindex="-1"></a>    edgePorte                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-313"><a href="#cb20-313" aria-hidden="true" tabindex="-1"></a>    edgeTablette                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-314"><a href="#cb20-314" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-315"><a href="#cb20-315" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Poign�es</span></span>
-<span id="cb20-316"><a href="#cb20-316" aria-hidden="true" tabindex="-1"></a>    handle                      <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-317"><a href="#cb20-317" aria-hidden="true" tabindex="-1"></a>    handleOri                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-318"><a href="#cb20-318" aria-hidden="true" tabindex="-1"></a>    bd_handle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-319"><a href="#cb20-319" aria-hidden="true" tabindex="-1"></a>    bd_handleOri                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-320"><a href="#cb20-320" aria-hidden="true" tabindex="-1"></a>    df_handle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-321"><a href="#cb20-321" aria-hidden="true" tabindex="-1"></a>    df_handleOri                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-322"><a href="#cb20-322" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-323"><a href="#cb20-323" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Configuration armoires</span></span>
-<span id="cb20-324"><a href="#cb20-324" aria-hidden="true" tabindex="-1"></a>    cabDesign                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-325"><a href="#cb20-325" aria-hidden="true" tabindex="-1"></a>    cabConstruct                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-326"><a href="#cb20-326" aria-hidden="true" tabindex="-1"></a>    cabHinge                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-327"><a href="#cb20-327" aria-hidden="true" tabindex="-1"></a>    cabWallProf                 <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-328"><a href="#cb20-328" aria-hidden="true" tabindex="-1"></a>    t_cabWallProf               <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-329"><a href="#cb20-329" aria-hidden="true" tabindex="-1"></a>    cabHautComptoir             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-330"><a href="#cb20-330" aria-hidden="true" tabindex="-1"></a>    t_cabHautComptoir           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-331"><a href="#cb20-331" aria-hidden="true" tabindex="-1"></a>    cabDegagementWall           <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-332"><a href="#cb20-332" aria-hidden="true" tabindex="-1"></a>    t_cabDegagementWall         <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-333"><a href="#cb20-333" aria-hidden="true" tabindex="-1"></a>    cabToeKickHeight            <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-334"><a href="#cb20-334" aria-hidden="true" tabindex="-1"></a>    t_cabToeKickHeight          <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-335"><a href="#cb20-335" aria-hidden="true" tabindex="-1"></a>    cabToeKickProf              <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-336"><a href="#cb20-336" aria-hidden="true" tabindex="-1"></a>    t_cabToeKickProf            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-337"><a href="#cb20-337" aria-hidden="true" tabindex="-1"></a>    cabToeKickType              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-338"><a href="#cb20-338" aria-hidden="true" tabindex="-1"></a>    cabAlignBase                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-339"><a href="#cb20-339" aria-hidden="true" tabindex="-1"></a>    t_cabAlignBase              <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-340"><a href="#cb20-340" aria-hidden="true" tabindex="-1"></a>    cabTallHeightAlign          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-341"><a href="#cb20-341" aria-hidden="true" tabindex="-1"></a>    t_cabTallHeightAlign        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-342"><a href="#cb20-342" aria-hidden="true" tabindex="-1"></a>    cabTypeComptoir             <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-343"><a href="#cb20-343" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-344"><a href="#cb20-344" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- �l�ments techniques</span></span>
-<span id="cb20-345"><a href="#cb20-345" aria-hidden="true" tabindex="-1"></a>    tabletteType                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-346"><a href="#cb20-346" aria-hidden="true" tabindex="-1"></a>    drawerConst                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-347"><a href="#cb20-347" aria-hidden="true" tabindex="-1"></a>    drawerSlide                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-348"><a href="#cb20-348" aria-hidden="true" tabindex="-1"></a>    matPatte                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-349"><a href="#cb20-349" aria-hidden="true" tabindex="-1"></a>    patteAchetee                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-350"><a href="#cb20-350" aria-hidden="true" tabindex="-1"></a>    equerre                     <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-351"><a href="#cb20-351" aria-hidden="true" tabindex="-1"></a>    cacheNeon                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-352"><a href="#cb20-352" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-353"><a href="#cb20-353" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Poutres</span></span>
-<span id="cb20-354"><a href="#cb20-354" aria-hidden="true" tabindex="-1"></a>    beamModele                  <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-355"><a href="#cb20-355" aria-hidden="true" tabindex="-1"></a>    beamHeight                  <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-356"><a href="#cb20-356" aria-hidden="true" tabindex="-1"></a>    t_beamHeight                <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-357"><a href="#cb20-357" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-358"><a href="#cb20-358" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Indicateurs</span></span>
-<span id="cb20-359"><a href="#cb20-359" aria-hidden="true" tabindex="-1"></a>    estBloqPrix                 BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-360"><a href="#cb20-360" aria-hidden="true" tabindex="-1"></a>    estPrixAdmin                BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-361"><a href="#cb20-361" aria-hidden="true" tabindex="-1"></a>    estExtra                    BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-362"><a href="#cb20-362" aria-hidden="true" tabindex="-1"></a>    enErreur                    BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-363"><a href="#cb20-363" aria-hidden="true" tabindex="-1"></a>    psd                         BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
-<span id="cb20-364"><a href="#cb20-364" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-365"><a href="#cb20-365" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Signatures et utilisation</span></span>
-<span id="cb20-366"><a href="#cb20-366" aria-hidden="true" tabindex="-1"></a>    signature                   <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-367"><a href="#cb20-367" aria-hidden="true" tabindex="-1"></a>    kitUtilisation              <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-368"><a href="#cb20-368" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-369"><a href="#cb20-369" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Sp�cifications mat�riaux d�taill�es</span></span>
-<span id="cb20-370"><a href="#cb20-370" aria-hidden="true" tabindex="-1"></a>    bd_specie                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-371"><a href="#cb20-371" aria-hidden="true" tabindex="-1"></a>    df_specie                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-372"><a href="#cb20-372" aria-hidden="true" tabindex="-1"></a>    bd_serie                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-373"><a href="#cb20-373" aria-hidden="true" tabindex="-1"></a>    df_serie                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-374"><a href="#cb20-374" aria-hidden="true" tabindex="-1"></a>    bd_finishColor              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-375"><a href="#cb20-375" aria-hidden="true" tabindex="-1"></a>    df_finishColor              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-376"><a href="#cb20-376" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-377"><a href="#cb20-377" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Mod�les de portes</span></span>
-<span id="cb20-378"><a href="#cb20-378" aria-hidden="true" tabindex="-1"></a>    porteModeleB                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-379"><a href="#cb20-379" aria-hidden="true" tabindex="-1"></a>    porteModeleH                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-380"><a href="#cb20-380" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeB          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-381"><a href="#cb20-381" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeH          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-382"><a href="#cb20-382" aria-hidden="true" tabindex="-1"></a>    porteModeleBSensGrain       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-383"><a href="#cb20-383" aria-hidden="true" tabindex="-1"></a>    porteModeleHSensGrain       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-384"><a href="#cb20-384" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeBSensGrain <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-385"><a href="#cb20-385" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeHSensGrain <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-386"><a href="#cb20-386" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-387"><a href="#cb20-387" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- �paisseurs portes</span></span>
-<span id="cb20-388"><a href="#cb20-388" aria-hidden="true" tabindex="-1"></a>    porteModeleB_epais          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-389"><a href="#cb20-389" aria-hidden="true" tabindex="-1"></a>    t_porteModeleB_epais        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-390"><a href="#cb20-390" aria-hidden="true" tabindex="-1"></a>    porteModeleH_epais          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-391"><a href="#cb20-391" aria-hidden="true" tabindex="-1"></a>    t_porteModeleH_epais        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-392"><a href="#cb20-392" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeB_epais    <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-393"><a href="#cb20-393" aria-hidden="true" tabindex="-1"></a>    t_porteModeleFacadeB_epais  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-394"><a href="#cb20-394" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeH_epais    <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-395"><a href="#cb20-395" aria-hidden="true" tabindex="-1"></a>    t_porteModeleFacadeH_epais  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-396"><a href="#cb20-396" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-397"><a href="#cb20-397" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Moulures</span></span>
-<span id="cb20-398"><a href="#cb20-398" aria-hidden="true" tabindex="-1"></a>    moulLumModele               <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-399"><a href="#cb20-399" aria-hidden="true" tabindex="-1"></a>    moulLumHeight               <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-400"><a href="#cb20-400" aria-hidden="true" tabindex="-1"></a>    t_moulLumHeight             <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-401"><a href="#cb20-401" aria-hidden="true" tabindex="-1"></a>    moulPiedModele              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-402"><a href="#cb20-402" aria-hidden="true" tabindex="-1"></a>    moulPiedHeight              <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-403"><a href="#cb20-403" aria-hidden="true" tabindex="-1"></a>    t_moulPiedHeight            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-404"><a href="#cb20-404" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-405"><a href="#cb20-405" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- D�tails techniques</span></span>
-<span id="cb20-406"><a href="#cb20-406" aria-hidden="true" tabindex="-1"></a>    detailSection               <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-407"><a href="#cb20-407" aria-hidden="true" tabindex="-1"></a>    aBomCustom                  <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-408"><a href="#cb20-408" aria-hidden="true" tabindex="-1"></a>    couleurEstBois              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-409"><a href="#cb20-409" aria-hidden="true" tabindex="-1"></a>    items                       NTEXT <span class="kw">NULL</span>,</span>
-<span id="cb20-410"><a href="#cb20-410" aria-hidden="true" tabindex="-1"></a>    typeColor                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
-<span id="cb20-411"><a href="#cb20-411" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb20-412"><a href="#cb20-412" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb20-413"><a href="#cb20-413" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb20-414"><a href="#cb20-414" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-415"><a href="#cb20-415" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb20-416"><a href="#cb20-416" aria-hidden="true" tabindex="-1"></a>GO</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- SCRIPT DE CR�ATION DU DATA WAREHOUSE DUNIN_DWH</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Cr�ation de la base de donn�es</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> name <span class="kw">FROM</span> sys.databases <span class="kw">WHERE</span> name <span class="op">=</span> <span class="st">'DUNIN_DWH'</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CREATE</span> <span class="kw">DATABASE</span> DUNIN_DWH;</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    PRINT <span class="st">'Base de donn�es DUNIN_DWH cr��e avec succ�s.'</span>;</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="cf">ELSE</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    PRINT <span class="st">'Base de donn�es DUNIN_DWH existe d�j�.'</span>;</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>GO</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="kw">USE</span> DUNIN_DWH;</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>GO</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- SUPPRESSION DES TABLES EXISTANTES (pour r�initialisation compl�te)</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- Suppression des tables de faits (d�pendantes)</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_etapes'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_etapes;</span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_lumieres'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_lumieres;</span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.fact_kits'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.fact_kits;</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.transactions'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.transactions;</span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a><span class="co">-- Suppression des tables de dimensions</span></span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_clients'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_clients;</span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_representants'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_representants;</span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_adresses'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_adresses;</span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_projets'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_projets;</span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> OBJECT_ID(<span class="st">'dbo.dim_dates'</span>, <span class="st">'U'</span>) <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DROP</span> <span class="kw">TABLE</span> dbo.dim_dates;</span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Tables existantes supprim�es.'</span>;</span>
+<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a>GO</span>
+<span id="cb29-40"><a href="#cb29-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-41"><a href="#cb29-41" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-42"><a href="#cb29-42" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DES TABLES DE DIMENSIONS</span></span>
+<span id="cb29-43"><a href="#cb29-43" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-44"><a href="#cb29-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-45"><a href="#cb29-45" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-46"><a href="#cb29-46" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION DATES</span></span>
+<span id="cb29-47"><a href="#cb29-47" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-48"><a href="#cb29-48" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_dates (</span>
+<span id="cb29-49"><a href="#cb29-49" aria-hidden="true" tabindex="-1"></a>    date_id         <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-50"><a href="#cb29-50" aria-hidden="true" tabindex="-1"></a>    <span class="dt">date</span>            <span class="dt">DATE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-51"><a href="#cb29-51" aria-hidden="true" tabindex="-1"></a>    annee           <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-52"><a href="#cb29-52" aria-hidden="true" tabindex="-1"></a>    mois            <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-53"><a href="#cb29-53" aria-hidden="true" tabindex="-1"></a>    nom_mois        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-54"><a href="#cb29-54" aria-hidden="true" tabindex="-1"></a>    jour            <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-55"><a href="#cb29-55" aria-hidden="true" tabindex="-1"></a>    jour_semaine    <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-56"><a href="#cb29-56" aria-hidden="true" tabindex="-1"></a>    nom_jour        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-57"><a href="#cb29-57" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-58"><a href="#cb29-58" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-59"><a href="#cb29-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-60"><a href="#cb29-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-61"><a href="#cb29-61" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-62"><a href="#cb29-62" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION CLIENTS</span></span>
+<span id="cb29-63"><a href="#cb29-63" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-64"><a href="#cb29-64" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_clients (</span>
+<span id="cb29-65"><a href="#cb29-65" aria-hidden="true" tabindex="-1"></a>    client_id       <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-66"><a href="#cb29-66" aria-hidden="true" tabindex="-1"></a>    nom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-67"><a href="#cb29-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">type</span>            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-68"><a href="#cb29-68" aria-hidden="true" tabindex="-1"></a>    transaction_id  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-69"><a href="#cb29-69" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-70"><a href="#cb29-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-71"><a href="#cb29-71" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Table dim_clients cr��e.'</span>;</span>
+<span id="cb29-72"><a href="#cb29-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-73"><a href="#cb29-73" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-74"><a href="#cb29-74" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION PROJETS</span></span>
+<span id="cb29-75"><a href="#cb29-75" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-76"><a href="#cb29-76" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_projets (</span>
+<span id="cb29-77"><a href="#cb29-77" aria-hidden="true" tabindex="-1"></a>    projet_id           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-78"><a href="#cb29-78" aria-hidden="true" tabindex="-1"></a>    marche              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-79"><a href="#cb29-79" aria-hidden="true" tabindex="-1"></a>    division            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-80"><a href="#cb29-80" aria-hidden="true" tabindex="-1"></a>    courrielContact     <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-81"><a href="#cb29-81" aria-hidden="true" tabindex="-1"></a>    nomContact          <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-82"><a href="#cb29-82" aria-hidden="true" tabindex="-1"></a>    telephoneContact    <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-83"><a href="#cb29-83" aria-hidden="true" tabindex="-1"></a>    coordsCommTxt       <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-84"><a href="#cb29-84" aria-hidden="true" tabindex="-1"></a>    coordsExpedTxt      <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-85"><a href="#cb29-85" aria-hidden="true" tabindex="-1"></a>    coordsFactTxt       <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-86"><a href="#cb29-86" aria-hidden="true" tabindex="-1"></a>    estReprise          BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-87"><a href="#cb29-87" aria-hidden="true" tabindex="-1"></a>    enFusion            BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-88"><a href="#cb29-88" aria-hidden="true" tabindex="-1"></a>    createurNom         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-89"><a href="#cb29-89" aria-hidden="true" tabindex="-1"></a>    createurCourriel    <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-90"><a href="#cb29-90" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-91"><a href="#cb29-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-92"><a href="#cb29-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-93"><a href="#cb29-93" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-94"><a href="#cb29-94" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION REPRESENTANTS</span></span>
+<span id="cb29-95"><a href="#cb29-95" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-96"><a href="#cb29-96" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_representants (</span>
+<span id="cb29-97"><a href="#cb29-97" aria-hidden="true" tabindex="-1"></a>    representant_id     <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-98"><a href="#cb29-98" aria-hidden="true" tabindex="-1"></a>    nom                 <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-99"><a href="#cb29-99" aria-hidden="true" tabindex="-1"></a>    codeRepresentant    <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-100"><a href="#cb29-100" aria-hidden="true" tabindex="-1"></a>    projet_id           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-101"><a href="#cb29-101" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl� �trang�re</span></span>
+<span id="cb29-102"><a href="#cb29-102" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_dim_representants_projet </span>
+<span id="cb29-103"><a href="#cb29-103" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id)</span>
+<span id="cb29-104"><a href="#cb29-104" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-105"><a href="#cb29-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-106"><a href="#cb29-106" aria-hidden="true" tabindex="-1"></a>PRINT <span class="st">'Table dim_representants cr��e.'</span>;</span>
+<span id="cb29-107"><a href="#cb29-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-108"><a href="#cb29-108" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-109"><a href="#cb29-109" aria-hidden="true" tabindex="-1"></a><span class="co">-- DIMENSION ADRESSES</span></span>
+<span id="cb29-110"><a href="#cb29-110" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-111"><a href="#cb29-111" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.dim_adresses (</span>
+<span id="cb29-112"><a href="#cb29-112" aria-hidden="true" tabindex="-1"></a>    adresse_id      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-113"><a href="#cb29-113" aria-hidden="true" tabindex="-1"></a>    codePost        <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-114"><a href="#cb29-114" aria-hidden="true" tabindex="-1"></a>    etatProv        <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-115"><a href="#cb29-115" aria-hidden="true" tabindex="-1"></a>    ligne1          <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-116"><a href="#cb29-116" aria-hidden="true" tabindex="-1"></a>    ligne2          <span class="dt">NVARCHAR</span>(<span class="dv">500</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-117"><a href="#cb29-117" aria-hidden="true" tabindex="-1"></a>    pays            <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-118"><a href="#cb29-118" aria-hidden="true" tabindex="-1"></a>    region          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-119"><a href="#cb29-119" aria-hidden="true" tabindex="-1"></a>    ville           <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-120"><a href="#cb29-120" aria-hidden="true" tabindex="-1"></a>    <span class="kw">usage</span>           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-121"><a href="#cb29-121" aria-hidden="true" tabindex="-1"></a>    code            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-122"><a href="#cb29-122" aria-hidden="true" tabindex="-1"></a>    sorte           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-123"><a href="#cb29-123" aria-hidden="true" tabindex="-1"></a>    projet_id       <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-124"><a href="#cb29-124" aria-hidden="true" tabindex="-1"></a>    nom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-125"><a href="#cb29-125" aria-hidden="true" tabindex="-1"></a>    contact         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-126"><a href="#cb29-126" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-127"><a href="#cb29-127" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl� �trang�re</span></span>
+<span id="cb29-128"><a href="#cb29-128" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_dim_adresses_projet </span>
+<span id="cb29-129"><a href="#cb29-129" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id)</span>
+<span id="cb29-130"><a href="#cb29-130" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-131"><a href="#cb29-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-132"><a href="#cb29-132" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-133"><a href="#cb29-133" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DE LA TABLE DE FAIT PRINCIPALE</span></span>
+<span id="cb29-134"><a href="#cb29-134" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-135"><a href="#cb29-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-136"><a href="#cb29-136" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-137"><a href="#cb29-137" aria-hidden="true" tabindex="-1"></a><span class="co">-- TRANSACTIONS (Fait principal)</span></span>
+<span id="cb29-138"><a href="#cb29-138" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-139"><a href="#cb29-139" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.transactions (</span>
+<span id="cb29-140"><a href="#cb29-140" aria-hidden="true" tabindex="-1"></a>    transaction_id          <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-141"><a href="#cb29-141" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-142"><a href="#cb29-142" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl�s �trang�res vers dimensions</span></span>
+<span id="cb29-143"><a href="#cb29-143" aria-hidden="true" tabindex="-1"></a>    projet_id               <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-144"><a href="#cb29-144" aria-hidden="true" tabindex="-1"></a>    date_creation_id        <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-145"><a href="#cb29-145" aria-hidden="true" tabindex="-1"></a>    date_validite_id        <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-146"><a href="#cb29-146" aria-hidden="true" tabindex="-1"></a>    date_prev_exped_id      <span class="dt">INT</span> <span class="kw">NULL</span>,</span>
+<span id="cb29-147"><a href="#cb29-147" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-148"><a href="#cb29-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Informations client (d�normalis� pour performance)</span></span>
+<span id="cb29-149"><a href="#cb29-149" aria-hidden="true" tabindex="-1"></a>    nomClient               <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-150"><a href="#cb29-150" aria-hidden="true" tabindex="-1"></a>    codeClient2             <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-151"><a href="#cb29-151" aria-hidden="true" tabindex="-1"></a>    typeClient              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-152"><a href="#cb29-152" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-153"><a href="#cb29-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques temporelles</span></span>
+<span id="cb29-154"><a href="#cb29-154" aria-hidden="true" tabindex="-1"></a>    delaiPrevExped          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-155"><a href="#cb29-155" aria-hidden="true" tabindex="-1"></a>    nbJourValide            <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-156"><a href="#cb29-156" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-157"><a href="#cb29-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Statuts et indicateurs</span></span>
+<span id="cb29-158"><a href="#cb29-158" aria-hidden="true" tabindex="-1"></a>    statutCred              BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-159"><a href="#cb29-159" aria-hidden="true" tabindex="-1"></a>    validCred               BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-160"><a href="#cb29-160" aria-hidden="true" tabindex="-1"></a>    estImport               BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-161"><a href="#cb29-161" aria-hidden="true" tabindex="-1"></a>    estReprise              BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-162"><a href="#cb29-162" aria-hidden="true" tabindex="-1"></a>    estCQ                   BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-163"><a href="#cb29-163" aria-hidden="true" tabindex="-1"></a>    avecLivraison           BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-164"><a href="#cb29-164" aria-hidden="true" tabindex="-1"></a>    installation            BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-165"><a href="#cb29-165" aria-hidden="true" tabindex="-1"></a>    psd                     BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-166"><a href="#cb29-166" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-167"><a href="#cb29-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques financi�res principales</span></span>
+<span id="cb29-168"><a href="#cb29-168" aria-hidden="true" tabindex="-1"></a>    total                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-169"><a href="#cb29-169" aria-hidden="true" tabindex="-1"></a>    totalHT                 <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-170"><a href="#cb29-170" aria-hidden="true" tabindex="-1"></a>    sousTotal               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-171"><a href="#cb29-171" aria-hidden="true" tabindex="-1"></a>    sousTotal2              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-172"><a href="#cb29-172" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-173"><a href="#cb29-173" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques de services</span></span>
+<span id="cb29-174"><a href="#cb29-174" aria-hidden="true" tabindex="-1"></a>    totalLivraison          <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-175"><a href="#cb29-175" aria-hidden="true" tabindex="-1"></a>    totalInstall            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-176"><a href="#cb29-176" aria-hidden="true" tabindex="-1"></a>    totalCEM                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-177"><a href="#cb29-177" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-178"><a href="#cb29-178" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques de quantit�</span></span>
+<span id="cb29-179"><a href="#cb29-179" aria-hidden="true" tabindex="-1"></a>    qteItems                <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-180"><a href="#cb29-180" aria-hidden="true" tabindex="-1"></a>    qteItemsCab             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-181"><a href="#cb29-181" aria-hidden="true" tabindex="-1"></a>    promotions              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-182"><a href="#cb29-182" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-183"><a href="#cb29-183" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Informations cr�ation</span></span>
+<span id="cb29-184"><a href="#cb29-184" aria-hidden="true" tabindex="-1"></a>    createurNom             <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-185"><a href="#cb29-185" aria-hidden="true" tabindex="-1"></a>    createurCourriel        <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-186"><a href="#cb29-186" aria-hidden="true" tabindex="-1"></a>    division                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-187"><a href="#cb29-187" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-188"><a href="#cb29-188" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Taxes et ajustements</span></span>
+<span id="cb29-189"><a href="#cb29-189" aria-hidden="true" tabindex="-1"></a>    totalTx1                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-190"><a href="#cb29-190" aria-hidden="true" tabindex="-1"></a>    totalTx2                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-191"><a href="#cb29-191" aria-hidden="true" tabindex="-1"></a>    ecartPrix               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-192"><a href="#cb29-192" aria-hidden="true" tabindex="-1"></a>    solde                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-193"><a href="#cb29-193" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-194"><a href="#cb29-194" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Sp�cificit�s contrats (comptoirs)</span></span>
+<span id="cb29-195"><a href="#cb29-195" aria-hidden="true" tabindex="-1"></a>    totalComptoirBois       <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-196"><a href="#cb29-196" aria-hidden="true" tabindex="-1"></a>    totalComptoirGranite    <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-197"><a href="#cb29-197" aria-hidden="true" tabindex="-1"></a>    totalComptoirQuartz     <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-198"><a href="#cb29-198" aria-hidden="true" tabindex="-1"></a>    totalComptoirStratifie  <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-199"><a href="#cb29-199" aria-hidden="true" tabindex="-1"></a>    totalEsc                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-200"><a href="#cb29-200" aria-hidden="true" tabindex="-1"></a>    montantEcartPrix        <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-201"><a href="#cb29-201" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-202"><a href="#cb29-202" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Frais sp�cialis�s</span></span>
+<span id="cb29-203"><a href="#cb29-203" aria-hidden="true" tabindex="-1"></a>    fraisPSD                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-204"><a href="#cb29-204" aria-hidden="true" tabindex="-1"></a>    fraisPDM                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-205"><a href="#cb29-205" aria-hidden="true" tabindex="-1"></a>    fraisSAV                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-206"><a href="#cb29-206" aria-hidden="true" tabindex="-1"></a>    TotalEscompte           <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-207"><a href="#cb29-207" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-208"><a href="#cb29-208" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Codes postaux</span></span>
+<span id="cb29-209"><a href="#cb29-209" aria-hidden="true" tabindex="-1"></a>    codePost                <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-210"><a href="#cb29-210" aria-hidden="true" tabindex="-1"></a>    codePostFinal           <span class="dt">NVARCHAR</span>(<span class="dv">20</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-211"><a href="#cb29-211" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-212"><a href="#cb29-212" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb29-213"><a href="#cb29-213" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb29-214"><a href="#cb29-214" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Cl�s �trang�res</span></span>
+<span id="cb29-215"><a href="#cb29-215" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_projet </span>
+<span id="cb29-216"><a href="#cb29-216" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (projet_id) <span class="kw">REFERENCES</span> dbo.dim_projets(projet_id),</span>
+<span id="cb29-217"><a href="#cb29-217" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_creation </span>
+<span id="cb29-218"><a href="#cb29-218" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_creation_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id),</span>
+<span id="cb29-219"><a href="#cb29-219" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_validite </span>
+<span id="cb29-220"><a href="#cb29-220" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_validite_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id),</span>
+<span id="cb29-221"><a href="#cb29-221" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span> FK_transactions_date_exped </span>
+<span id="cb29-222"><a href="#cb29-222" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (date_prev_exped_id) <span class="kw">REFERENCES</span> dbo.dim_dates(date_id)</span>
+<span id="cb29-223"><a href="#cb29-223" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-224"><a href="#cb29-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-225"><a href="#cb29-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-226"><a href="#cb29-226" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-227"><a href="#cb29-227" aria-hidden="true" tabindex="-1"></a><span class="co">-- CR�ATION DES TABLES DE FAITS SECONDAIRES</span></span>
+<span id="cb29-228"><a href="#cb29-228" aria-hidden="true" tabindex="-1"></a><span class="co">-- ============================================================================</span></span>
+<span id="cb29-229"><a href="#cb29-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-230"><a href="#cb29-230" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-231"><a href="#cb29-231" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_ETAPES</span></span>
+<span id="cb29-232"><a href="#cb29-232" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-233"><a href="#cb29-233" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_etapes (</span>
+<span id="cb29-234"><a href="#cb29-234" aria-hidden="true" tabindex="-1"></a>    etape_id        <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-235"><a href="#cb29-235" aria-hidden="true" tabindex="-1"></a>    createur        <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-236"><a href="#cb29-236" aria-hidden="true" tabindex="-1"></a>    emplacement     <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-237"><a href="#cb29-237" aria-hidden="true" tabindex="-1"></a>    statut          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-238"><a href="#cb29-238" aria-hidden="true" tabindex="-1"></a>    tempsCreation   <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-239"><a href="#cb29-239" aria-hidden="true" tabindex="-1"></a>    commande_id     <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-240"><a href="#cb29-240" aria-hidden="true" tabindex="-1"></a>    contrat_id      <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-241"><a href="#cb29-241" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-242"><a href="#cb29-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-243"><a href="#cb29-243" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-244"><a href="#cb29-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-245"><a href="#cb29-245" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-246"><a href="#cb29-246" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_LUMIERES</span></span>
+<span id="cb29-247"><a href="#cb29-247" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-248"><a href="#cb29-248" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_lumieres (</span>
+<span id="cb29-249"><a href="#cb29-249" aria-hidden="true" tabindex="-1"></a>    lumiere_id      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-250"><a href="#cb29-250" aria-hidden="true" tabindex="-1"></a>    modele          <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-251"><a href="#cb29-251" aria-hidden="true" tabindex="-1"></a>    qte             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-252"><a href="#cb29-252" aria-hidden="true" tabindex="-1"></a>    contrat_id      <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-253"><a href="#cb29-253" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-254"><a href="#cb29-254" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-255"><a href="#cb29-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-256"><a href="#cb29-256" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-257"><a href="#cb29-257" aria-hidden="true" tabindex="-1"></a><span class="co">-- FACT_KITS (Table la plus complexe)</span></span>
+<span id="cb29-258"><a href="#cb29-258" aria-hidden="true" tabindex="-1"></a><span class="co">-- -----------------------------</span></span>
+<span id="cb29-259"><a href="#cb29-259" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> dbo.fact_kits (</span>
+<span id="cb29-260"><a href="#cb29-260" aria-hidden="true" tabindex="-1"></a>    kit_id                      <span class="dt">INT</span> IDENTITY(<span class="dv">1</span>,<span class="dv">1</span>) <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb29-261"><a href="#cb29-261" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-262"><a href="#cb29-262" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Identification</span></span>
+<span id="cb29-263"><a href="#cb29-263" aria-hidden="true" tabindex="-1"></a>    code                        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-264"><a href="#cb29-264" aria-hidden="true" tabindex="-1"></a>    nom                         <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-265"><a href="#cb29-265" aria-hidden="true" tabindex="-1"></a>    typeKit                     <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-266"><a href="#cb29-266" aria-hidden="true" tabindex="-1"></a>    unit                        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-267"><a href="#cb29-267" aria-hidden="true" tabindex="-1"></a>    ligne                       <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-268"><a href="#cb29-268" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-269"><a href="#cb29-269" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Liens transactionnels</span></span>
+<span id="cb29-270"><a href="#cb29-270" aria-hidden="true" tabindex="-1"></a>    commande_id                 <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-271"><a href="#cb29-271" aria-hidden="true" tabindex="-1"></a>    contrat_id                  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-272"><a href="#cb29-272" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-273"><a href="#cb29-273" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Quantit�s</span></span>
+<span id="cb29-274"><a href="#cb29-274" aria-hidden="true" tabindex="-1"></a>    qte                         <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-275"><a href="#cb29-275" aria-hidden="true" tabindex="-1"></a>    qteTr                       <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-276"><a href="#cb29-276" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-277"><a href="#cb29-277" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- M�triques financi�res</span></span>
+<span id="cb29-278"><a href="#cb29-278" aria-hidden="true" tabindex="-1"></a>    sousTotalKit                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-279"><a href="#cb29-279" aria-hidden="true" tabindex="-1"></a>    sousTotalKitEff             <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-280"><a href="#cb29-280" aria-hidden="true" tabindex="-1"></a>    sousTotal                   <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-281"><a href="#cb29-281" aria-hidden="true" tabindex="-1"></a>    sousTotalEff                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-282"><a href="#cb29-282" aria-hidden="true" tabindex="-1"></a>    sousTotalCab                <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-283"><a href="#cb29-283" aria-hidden="true" tabindex="-1"></a>    sousTotalPanel              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-284"><a href="#cb29-284" aria-hidden="true" tabindex="-1"></a>    sousTotalMoulure            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-285"><a href="#cb29-285" aria-hidden="true" tabindex="-1"></a>    sousTotalAutre              <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-286"><a href="#cb29-286" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-287"><a href="#cb29-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Comptoirs</span></span>
+<span id="cb29-288"><a href="#cb29-288" aria-hidden="true" tabindex="-1"></a>    totalComptoir               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-289"><a href="#cb29-289" aria-hidden="true" tabindex="-1"></a>    totalComptoirEff            <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-290"><a href="#cb29-290" aria-hidden="true" tabindex="-1"></a>    nbComptoir                  <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-291"><a href="#cb29-291" aria-hidden="true" tabindex="-1"></a>    longComptoir                <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-292"><a href="#cb29-292" aria-hidden="true" tabindex="-1"></a>    surfaceComptoir             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-293"><a href="#cb29-293" aria-hidden="true" tabindex="-1"></a>    cumulComptoir               <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-294"><a href="#cb29-294" aria-hidden="true" tabindex="-1"></a>    extraComptoir               <span class="dt">DECIMAL</span>(<span class="dv">15</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-295"><a href="#cb29-295" aria-hidden="true" tabindex="-1"></a>    comptoirMod                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-296"><a href="#cb29-296" aria-hidden="true" tabindex="-1"></a>    comptoirCouleur             <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-297"><a href="#cb29-297" aria-hidden="true" tabindex="-1"></a>    comptoirGpCouleur           <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-298"><a href="#cb29-298" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-299"><a href="#cb29-299" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Caract�ristiques produit</span></span>
+<span id="cb29-300"><a href="#cb29-300" aria-hidden="true" tabindex="-1"></a>    assemblage                  <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-301"><a href="#cb29-301" aria-hidden="true" tabindex="-1"></a>    gamme                       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-302"><a href="#cb29-302" aria-hidden="true" tabindex="-1"></a>    serie                       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-303"><a href="#cb29-303" aria-hidden="true" tabindex="-1"></a>    finishColor                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-304"><a href="#cb29-304" aria-hidden="true" tabindex="-1"></a>    specie                      <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-305"><a href="#cb29-305" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-306"><a href="#cb29-306" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Bordures et finitions</span></span>
+<span id="cb29-307"><a href="#cb29-307" aria-hidden="true" tabindex="-1"></a>    edgeColle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-308"><a href="#cb29-308" aria-hidden="true" tabindex="-1"></a>    edgeBanding                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-309"><a href="#cb29-309" aria-hidden="true" tabindex="-1"></a>    bd_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-310"><a href="#cb29-310" aria-hidden="true" tabindex="-1"></a>    df_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-311"><a href="#cb29-311" aria-hidden="true" tabindex="-1"></a>    wd_edgeBanding              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-312"><a href="#cb29-312" aria-hidden="true" tabindex="-1"></a>    edgePorte                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-313"><a href="#cb29-313" aria-hidden="true" tabindex="-1"></a>    edgeTablette                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-314"><a href="#cb29-314" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-315"><a href="#cb29-315" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Poign�es</span></span>
+<span id="cb29-316"><a href="#cb29-316" aria-hidden="true" tabindex="-1"></a>    handle                      <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-317"><a href="#cb29-317" aria-hidden="true" tabindex="-1"></a>    handleOri                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-318"><a href="#cb29-318" aria-hidden="true" tabindex="-1"></a>    bd_handle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-319"><a href="#cb29-319" aria-hidden="true" tabindex="-1"></a>    bd_handleOri                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-320"><a href="#cb29-320" aria-hidden="true" tabindex="-1"></a>    df_handle                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-321"><a href="#cb29-321" aria-hidden="true" tabindex="-1"></a>    df_handleOri                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-322"><a href="#cb29-322" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-323"><a href="#cb29-323" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Configuration armoires</span></span>
+<span id="cb29-324"><a href="#cb29-324" aria-hidden="true" tabindex="-1"></a>    cabDesign                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-325"><a href="#cb29-325" aria-hidden="true" tabindex="-1"></a>    cabConstruct                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-326"><a href="#cb29-326" aria-hidden="true" tabindex="-1"></a>    cabHinge                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-327"><a href="#cb29-327" aria-hidden="true" tabindex="-1"></a>    cabWallProf                 <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-328"><a href="#cb29-328" aria-hidden="true" tabindex="-1"></a>    t_cabWallProf               <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-329"><a href="#cb29-329" aria-hidden="true" tabindex="-1"></a>    cabHautComptoir             <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-330"><a href="#cb29-330" aria-hidden="true" tabindex="-1"></a>    t_cabHautComptoir           <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-331"><a href="#cb29-331" aria-hidden="true" tabindex="-1"></a>    cabDegagementWall           <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-332"><a href="#cb29-332" aria-hidden="true" tabindex="-1"></a>    t_cabDegagementWall         <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-333"><a href="#cb29-333" aria-hidden="true" tabindex="-1"></a>    cabToeKickHeight            <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-334"><a href="#cb29-334" aria-hidden="true" tabindex="-1"></a>    t_cabToeKickHeight          <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-335"><a href="#cb29-335" aria-hidden="true" tabindex="-1"></a>    cabToeKickProf              <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-336"><a href="#cb29-336" aria-hidden="true" tabindex="-1"></a>    t_cabToeKickProf            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-337"><a href="#cb29-337" aria-hidden="true" tabindex="-1"></a>    cabToeKickType              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-338"><a href="#cb29-338" aria-hidden="true" tabindex="-1"></a>    cabAlignBase                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-339"><a href="#cb29-339" aria-hidden="true" tabindex="-1"></a>    t_cabAlignBase              <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-340"><a href="#cb29-340" aria-hidden="true" tabindex="-1"></a>    cabTallHeightAlign          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-341"><a href="#cb29-341" aria-hidden="true" tabindex="-1"></a>    t_cabTallHeightAlign        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-342"><a href="#cb29-342" aria-hidden="true" tabindex="-1"></a>    cabTypeComptoir             <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-343"><a href="#cb29-343" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-344"><a href="#cb29-344" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- �l�ments techniques</span></span>
+<span id="cb29-345"><a href="#cb29-345" aria-hidden="true" tabindex="-1"></a>    tabletteType                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-346"><a href="#cb29-346" aria-hidden="true" tabindex="-1"></a>    drawerConst                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-347"><a href="#cb29-347" aria-hidden="true" tabindex="-1"></a>    drawerSlide                 <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-348"><a href="#cb29-348" aria-hidden="true" tabindex="-1"></a>    matPatte                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-349"><a href="#cb29-349" aria-hidden="true" tabindex="-1"></a>    patteAchetee                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-350"><a href="#cb29-350" aria-hidden="true" tabindex="-1"></a>    equerre                     <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-351"><a href="#cb29-351" aria-hidden="true" tabindex="-1"></a>    cacheNeon                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-352"><a href="#cb29-352" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-353"><a href="#cb29-353" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Poutres</span></span>
+<span id="cb29-354"><a href="#cb29-354" aria-hidden="true" tabindex="-1"></a>    beamModele                  <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-355"><a href="#cb29-355" aria-hidden="true" tabindex="-1"></a>    beamHeight                  <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-356"><a href="#cb29-356" aria-hidden="true" tabindex="-1"></a>    t_beamHeight                <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-357"><a href="#cb29-357" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-358"><a href="#cb29-358" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Indicateurs</span></span>
+<span id="cb29-359"><a href="#cb29-359" aria-hidden="true" tabindex="-1"></a>    estBloqPrix                 BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-360"><a href="#cb29-360" aria-hidden="true" tabindex="-1"></a>    estPrixAdmin                BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-361"><a href="#cb29-361" aria-hidden="true" tabindex="-1"></a>    estExtra                    BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-362"><a href="#cb29-362" aria-hidden="true" tabindex="-1"></a>    enErreur                    BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-363"><a href="#cb29-363" aria-hidden="true" tabindex="-1"></a>    psd                         BIT <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb29-364"><a href="#cb29-364" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-365"><a href="#cb29-365" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Signatures et utilisation</span></span>
+<span id="cb29-366"><a href="#cb29-366" aria-hidden="true" tabindex="-1"></a>    signature                   <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-367"><a href="#cb29-367" aria-hidden="true" tabindex="-1"></a>    kitUtilisation              <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-368"><a href="#cb29-368" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-369"><a href="#cb29-369" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Sp�cifications mat�riaux d�taill�es</span></span>
+<span id="cb29-370"><a href="#cb29-370" aria-hidden="true" tabindex="-1"></a>    bd_specie                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-371"><a href="#cb29-371" aria-hidden="true" tabindex="-1"></a>    df_specie                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-372"><a href="#cb29-372" aria-hidden="true" tabindex="-1"></a>    bd_serie                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-373"><a href="#cb29-373" aria-hidden="true" tabindex="-1"></a>    df_serie                    <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-374"><a href="#cb29-374" aria-hidden="true" tabindex="-1"></a>    bd_finishColor              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-375"><a href="#cb29-375" aria-hidden="true" tabindex="-1"></a>    df_finishColor              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-376"><a href="#cb29-376" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-377"><a href="#cb29-377" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Mod�les de portes</span></span>
+<span id="cb29-378"><a href="#cb29-378" aria-hidden="true" tabindex="-1"></a>    porteModeleB                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-379"><a href="#cb29-379" aria-hidden="true" tabindex="-1"></a>    porteModeleH                <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-380"><a href="#cb29-380" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeB          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-381"><a href="#cb29-381" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeH          <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-382"><a href="#cb29-382" aria-hidden="true" tabindex="-1"></a>    porteModeleBSensGrain       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-383"><a href="#cb29-383" aria-hidden="true" tabindex="-1"></a>    porteModeleHSensGrain       <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-384"><a href="#cb29-384" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeBSensGrain <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-385"><a href="#cb29-385" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeHSensGrain <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-386"><a href="#cb29-386" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-387"><a href="#cb29-387" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- �paisseurs portes</span></span>
+<span id="cb29-388"><a href="#cb29-388" aria-hidden="true" tabindex="-1"></a>    porteModeleB_epais          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-389"><a href="#cb29-389" aria-hidden="true" tabindex="-1"></a>    t_porteModeleB_epais        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-390"><a href="#cb29-390" aria-hidden="true" tabindex="-1"></a>    porteModeleH_epais          <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-391"><a href="#cb29-391" aria-hidden="true" tabindex="-1"></a>    t_porteModeleH_epais        <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-392"><a href="#cb29-392" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeB_epais    <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-393"><a href="#cb29-393" aria-hidden="true" tabindex="-1"></a>    t_porteModeleFacadeB_epais  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-394"><a href="#cb29-394" aria-hidden="true" tabindex="-1"></a>    porteModeleFacadeH_epais    <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-395"><a href="#cb29-395" aria-hidden="true" tabindex="-1"></a>    t_porteModeleFacadeH_epais  <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-396"><a href="#cb29-396" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-397"><a href="#cb29-397" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Moulures</span></span>
+<span id="cb29-398"><a href="#cb29-398" aria-hidden="true" tabindex="-1"></a>    moulLumModele               <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-399"><a href="#cb29-399" aria-hidden="true" tabindex="-1"></a>    moulLumHeight               <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-400"><a href="#cb29-400" aria-hidden="true" tabindex="-1"></a>    t_moulLumHeight             <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-401"><a href="#cb29-401" aria-hidden="true" tabindex="-1"></a>    moulPiedModele              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-402"><a href="#cb29-402" aria-hidden="true" tabindex="-1"></a>    moulPiedHeight              <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-403"><a href="#cb29-403" aria-hidden="true" tabindex="-1"></a>    t_moulPiedHeight            <span class="dt">NVARCHAR</span>(<span class="dv">50</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-404"><a href="#cb29-404" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-405"><a href="#cb29-405" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- D�tails techniques</span></span>
+<span id="cb29-406"><a href="#cb29-406" aria-hidden="true" tabindex="-1"></a>    detailSection               <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-407"><a href="#cb29-407" aria-hidden="true" tabindex="-1"></a>    aBomCustom                  <span class="dt">NVARCHAR</span>(<span class="dv">255</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-408"><a href="#cb29-408" aria-hidden="true" tabindex="-1"></a>    couleurEstBois              <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-409"><a href="#cb29-409" aria-hidden="true" tabindex="-1"></a>    items                       NTEXT <span class="kw">NULL</span>,</span>
+<span id="cb29-410"><a href="#cb29-410" aria-hidden="true" tabindex="-1"></a>    typeColor                   <span class="dt">NVARCHAR</span>(<span class="dv">100</span>) <span class="kw">NULL</span>,</span>
+<span id="cb29-411"><a href="#cb29-411" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-412"><a href="#cb29-412" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb29-413"><a href="#cb29-413" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb29-414"><a href="#cb29-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-415"><a href="#cb29-415" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb29-416"><a href="#cb29-416" aria-hidden="true" tabindex="-1"></a>GO</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="vue-densembles" class="level1" data-number="7">
 <h1 data-number="7"><span class="header-section-number">7</span> vue d’ensembles</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fact_etapes <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>fact_etapes <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3,888 × 6
    createur              emplacement statut tempsCreation commande_id contrat_id
@@ -1116,7 +1382,7 @@ Attachement du package : 'dplyr'</code></pre>
 10 clientDunin           Client      Saisie             0 C-000010    ""        
 # ℹ 3,878 more rows</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fact_kits  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>fact_kits  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 20,498 × 114
    code  nom      qte qteTr typeKit unit  sousTotalKit sousTotalKitEff sousTotal
@@ -1139,7 +1405,7 @@ Attachement du package : 'dplyr'</code></pre>
 #   sousTotalCab &lt;dbl&gt;, sousTotalPanel &lt;dbl&gt;, sousTotalMoulure &lt;dbl&gt;,
 #   sousTotalAutre &lt;dbl&gt;, assemblage &lt;chr&gt;, gamme &lt;chr&gt;, serie &lt;chr&gt;, …</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fact_lumieres  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fact_lumieres <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 942 × 3
    modele         qte contrat_id 
@@ -1156,7 +1422,7 @@ Attachement du package : 'dplyr'</code></pre>
 10 PUCK79mm_BL      3 P-000930-S1
 # ℹ 932 more rows</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3,818 × 47
    code  nomClient codeClient2 typeClient delaiPrevExped nbJourValide statutCred
@@ -1179,7 +1445,7 @@ Attachement du package : 'dplyr'</code></pre>
 #   division &lt;chr&gt;, projet_id &lt;chr&gt;, estImport &lt;lgl&gt;, estReprise &lt;lgl&gt;,
 #   estCQ &lt;lgl&gt;, avecLivraison &lt;lgl&gt;, installation &lt;lgl&gt;, totalTx1 &lt;dbl&gt;, …</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dim_dates  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>dim_dates  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 660 × 8
     date_id date       annee  mois nom_mois  jour jour_semaine nom_jour
@@ -1196,7 +1462,7 @@ Attachement du package : 'dplyr'</code></pre>
 10 20221028 2022-10-28  2022    10 octobre     28            5 vendredi
 # ℹ 650 more rows</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dim_projets  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dim_projets  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2,035 × 13
    projet_id marche   division   courrielContact  nomContact   telephoneContact
@@ -1216,7 +1482,7 @@ Attachement du package : 'dplyr'</code></pre>
 #   coordsFactTxt &lt;chr&gt;, estReprise &lt;lgl&gt;, enFusion &lt;lgl&gt;, createurNom &lt;chr&gt;,
 #   createurCourriel &lt;chr&gt;</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>dim_representants  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>dim_representants  <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2,035 × 4
    representant_id nom         codeRepresentant projet_id
@@ -1233,7 +1499,7 @@ Attachement du package : 'dplyr'</code></pre>
 10              10 "Mr Robert" "003"            P-000005 
 # ℹ 2,025 more rows</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>dim_clients <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>dim_clients <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4,532 × 4
    client_id nom      type        transaction_id
@@ -1250,7 +1516,7 @@ Attachement du package : 'dplyr'</code></pre>
 10        10 "Avivia" particulier C-000220      
 # ℹ 4,522 more rows</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dim_adresses <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>dim_adresses <span class="sc">|&gt;</span> <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 21,263 × 14
    codePost etatProv ligne1          ligne2 pays  region ville usage code  sorte
